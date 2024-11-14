@@ -6,13 +6,15 @@ import 'package:just_audio/just_audio.dart';
 class AudioControls extends StatelessWidget {
   final AudioPlayer player;
 
-  const AudioControls(this.player, {Key? key}) : super(key: key);
+  const AudioControls(this.player, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        _buildVolumeControl(context),
+        const SizedBox(width: 40.0),
         // 재생/일시정지 버튼
         StreamBuilder<PlayerState>(
           stream: player.playerStateStream,
@@ -47,7 +49,6 @@ class AudioControls extends StatelessWidget {
             );
           },
         ),
-        _buildVolumeControl(context),
         const SizedBox(width: 40),
         _buildSpeedControl(context),
       ],
