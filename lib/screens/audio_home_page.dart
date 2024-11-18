@@ -19,27 +19,33 @@ class AudioHomePage extends StatefulWidget {
 class _AudioHomePageState extends State<AudioHomePage> {
   late final AudioService _audioService;
   int _selectedIndex = 0;
-  Duration _remainingTime = Duration.zero;
+  Duration _remainingTime = const Duration(minutes: 5);
 
   @override
   void initState() {
     super.initState();
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
     _audioService = AudioService();
-    BatteryOptimizationHandler.ignoreBatteryOptimization();
-    _initializeAudio();
+    await BatteryOptimizationHandler.ignoreBatteryOptimization();
+    await _initializeAudio();
+    await _startBackgroundService();
   }
 
   Future<void> _initializeAudio() async {
     await _audioService.initialize();
     await _setTrack(_selectedIndex);
     _setupTimerListener();
-    _startBackgroundService();
   }
 
   void _setupTimerListener() {
-    _audioService.timerStream.listen((duration) {
-      setState(() => _remainingTime = duration);
-    });
+    _audioService.timerStream.listen(_updateRemainingTime);
+  }
+
+  void _updateRemainingTime(Duration duration) {
+    setState(() => _remainingTime = duration);
   }
 
   Future<void> _setTrack(int index) async {
@@ -48,11 +54,17 @@ class _AudioHomePageState extends State<AudioHomePage> {
 
   Future<void> _startBackgroundService() async {
     final service = FlutterBackgroundService();
-    final isRunning = await service.isRunning();
-    if (!isRunning) {
-      service.startService();
+    if (!await service.isRunning()) {
+      await service.startService();
     }
     service.invoke('setAsForeground');
+  }
+
+  Future<void> _onTrackChanged(int? index) async {
+    if (index != null && index != _selectedIndex) {
+      setState(() => _selectedIndex = index);
+      await _setTrack(index);
+    }
   }
 
   @override
@@ -65,11 +77,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sleepy Audio'),
-        backgroundColor: Colors.blueGrey[900],
-        elevation: 0,
-      ),
+      appBar: _buildAppBar(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -83,25 +91,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
               const SizedBox(height: 30),
               _buildTimerSection(),
               const SizedBox(height: 30),
-              // move to explain_screen
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ExplainScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey[800],
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                ),
-                child: const Text(
-                  'How It Works',
-                  style: TextStyle(color: Colors.tealAccent),
-                ),
-              ),
+              _buildHowItWorksButton(),
             ],
           ),
         ),
@@ -109,10 +99,18 @@ class _AudioHomePageState extends State<AudioHomePage> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: const Text('Sleepy Audio'),
+      backgroundColor: Colors.blueGrey[900],
+      elevation: 0,
+    );
+  }
+
   Widget _buildTrackInfo() {
     return StreamBuilder<SequenceState?>(
       stream: _audioService.player.sequenceStateStream,
-      builder: (context, snapshot) {
+      builder: (context, _) {
         return Text(
           'Now Playing: ${TracksData.tracks[_selectedIndex].title}',
           style: Theme.of(context).textTheme.titleLarge,
@@ -130,43 +128,40 @@ class _AudioHomePageState extends State<AudioHomePage> {
         height: 2,
         color: Colors.tealAccent,
       ),
-      items: TracksData.tracks.asMap().entries.map((entry) {
-        return DropdownMenuItem<int>(
-          value: entry.key,
-          child: Text(entry.value.title),
-        );
-      }).toList(),
+      items: _buildTrackItems(),
       onChanged: _onTrackChanged,
     );
   }
 
-  Future<void> _onTrackChanged(int? index) async {
-    if (index != null && index != _selectedIndex) {
-      setState(() => _selectedIndex = index);
-      await _setTrack(index);
-      _audioService.player.play();
-    }
+  List<DropdownMenuItem<int>> _buildTrackItems() {
+    return TracksData.tracks.asMap().entries.map((entry) {
+      return DropdownMenuItem<int>(
+        value: entry.key,
+        child: Text(entry.value.title),
+      );
+    }).toList();
   }
 
   Widget _buildTimerSection() {
     return Column(
       children: [
-        Text(
-          _remainingTime > Duration.zero
-              ? 'Remaining Time: ${DurationFormatter.format(_remainingTime)}'
-              : 'No Timer Set',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: _remainingTime > Duration.zero
-                ? Colors.tealAccent
-                : Colors.white70,
-          ),
-        ),
+        _buildTimerDisplay(),
         const SizedBox(height: 10),
         _buildTimerButtons(),
-        if (_remainingTime > Duration.zero) _buildCancelButton(),
       ],
+    );
+  }
+
+  Widget _buildTimerDisplay() {
+    return Text(
+      _remainingTime > Duration.zero
+          ? 'Remaining Time: ${DurationFormatter.format(_remainingTime)}'
+          : 'No Timer Set',
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: _remainingTime > Duration.zero ? Colors.tealAccent : Colors.white70,
+      ),
     );
   }
 
@@ -174,60 +169,43 @@ class _AudioHomePageState extends State<AudioHomePage> {
     return Wrap(
       spacing: 10.0,
       runSpacing: 10.0,
-      children: [
-        TimerButton(
-          label: '10초',
-          duration: const Duration(seconds: 10),
-          onPressed: () =>
-              _audioService.startTimer(const Duration(seconds: 10)),
-        ),
-        TimerButton(
-          label: '1분',
-          duration: const Duration(minutes: 1),
-          onPressed: () => _audioService.startTimer(const Duration(minutes: 1)),
-        ),
-        TimerButton(
-          label: '5분',
-          duration: const Duration(minutes: 5),
-          onPressed: () => _audioService.startTimer(const Duration(minutes: 5)),
-        ),
-        TimerButton(
-          label: '10분',
-          duration: const Duration(minutes: 10),
-          onPressed: () =>
-              _audioService.startTimer(const Duration(minutes: 10)),
-        ),
-        TimerButton(
-          label: '15분',
-          duration: const Duration(minutes: 15),
-          onPressed: () =>
-              _audioService.startTimer(const Duration(minutes: 15)),
-        ),
-        TimerButton(
-          label: '30분',
-          duration: const Duration(minutes: 30),
-          onPressed: () =>
-              _audioService.startTimer(const Duration(minutes: 30)),
-        ),
-        TimerButton(
-          label: '1시간',
-          duration: const Duration(hours: 1),
-          onPressed: () => _audioService.startTimer(const Duration(hours: 1)),
-        ),
-      ],
+      children: _buildTimerButtonsList(),
     );
   }
 
-  Widget _buildCancelButton() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: ElevatedButton(
-        onPressed: _audioService.cancelTimer,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[700],
-          foregroundColor: Colors.white,
-        ),
-        child: const Text('타이머 취소'),
+  List<Widget> _buildTimerButtonsList() {
+    final timerDurations = [
+      {'label': '10초', 'duration': const Duration(seconds: 10)},
+      {'label': '1분', 'duration': const Duration(minutes: 1)},
+      {'label': '5분', 'duration': const Duration(minutes: 5)},
+      {'label': '10분', 'duration': const Duration(minutes: 10)},
+      {'label': '15분', 'duration': const Duration(minutes: 15)},
+      {'label': '30분', 'duration': const Duration(minutes: 30)},
+      {'label': '1시간', 'duration': const Duration(hours: 1)},
+    ];
+
+    return timerDurations.map((timer) {
+      return TimerButton(
+        label: timer['label'] as String,
+        duration: timer['duration'] as Duration,
+        onPressed: () => _audioService.startTimer(timer['duration'] as Duration),
+      );
+    }).toList();
+  }
+
+  Widget _buildHowItWorksButton() {
+    return ElevatedButton(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ExplainScreen()),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blueGrey[800],
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+      ),
+      child: const Text(
+        'How It Works',
+        style: TextStyle(color: Colors.tealAccent),
       ),
     );
   }
