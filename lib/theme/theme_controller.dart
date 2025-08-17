@@ -58,12 +58,9 @@ class ThemeController extends ChangeNotifier {
       case AppThemeOption.day:
         return AppTheme.light();
       case AppThemeOption.dynamic:
-        if (dynamicScheme != null) {
-          // Apply dynamic scheme to our component theming by copying from AppTheme.light()
-          final base = AppTheme.light();
-          return base.copyWith(colorScheme: dynamicScheme, scaffoldBackgroundColor: dynamicScheme.surface);
-        }
-        return AppTheme.light();
+        return dynamicScheme != null
+            ? AppTheme.fromScheme(dynamicScheme)
+            : AppTheme.light();
     }
   }
 
@@ -74,11 +71,9 @@ class ThemeController extends ChangeNotifier {
       case AppThemeOption.day:
         return AppTheme.dark();
       case AppThemeOption.dynamic:
-        if (dynamicScheme != null) {
-          final base = AppTheme.dark();
-          return base.copyWith(colorScheme: dynamicScheme, scaffoldBackgroundColor: dynamicScheme.surface);
-        }
-        return AppTheme.dark();
+        return dynamicScheme != null
+            ? AppTheme.fromScheme(dynamicScheme)
+            : AppTheme.dark();
     }
   }
 }

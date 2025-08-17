@@ -66,10 +66,10 @@ class _MyAppState extends State<MyApp> {
       title: 'Sleepy Audio App',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: widget.controller.themeMode,
       home: AudioHomePage(controller: widget.controller),
       builder: (context, child) {
-        return _AppScaffold(child: child, controller: widget.controller);
+        return _AppScaffold(controller: widget.controller, child: child);
       },
     );
   }

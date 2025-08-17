@@ -1,11 +1,20 @@
+// Visual backgrounds that adapt to your app's current sound: rainy / waves / campfire.
+// - SoundscapeBackground: pass `mode: Soundscape.rainy|waves|campfire`
+// - Lightweight, battery-friendly Canvas effects; no external packages.
+// - Works nicely behind a transparent Scaffold.
+//
+// v2 changes (campfire refined):
+// - Removed image-based logs. Optional simple vector logs (off by default).
+// - Added FlameCore layer (procedural, blurred path flames) so the ignition point looks natural.
+// - Brightened base ignition glow and reduced over-attenuation near base.
+// - Kept Rainy streaks layer and Ocean controls from prior patch.
+
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/ui/low_mist.dart';
 
-Color _op(Color c, double o) {
-  final clamped = o.clamp(0.0, 1.0);
-  return c.withAlpha((clamped * 255).round());
-}
+Color _op(Color c, double o) => c.withAlpha(((o.clamp(0.0, 1.0)) * 255).round());
 
 enum Soundscape { rainy, waves, campfire }
 
@@ -14,8 +23,8 @@ class SoundscapeBackground extends StatelessWidget {
     super.key,
     required this.mode,
     this.intensity = 1.0,
-    this.oceanLevel = 0.46,
-    this.logsAssetPath, // optional for campfire
+    this.oceanLevel = 0.76,
+    this.showVectorLogs = false, // new: vector logs are optional
   });
 
   final Soundscape mode;
@@ -23,9 +32,7 @@ class SoundscapeBackground extends StatelessWidget {
   /// 0.5 ~ 1.5 recommended. Scales particle counts and amplitudes.
   final double intensity;
   final double oceanLevel;
-
-  /// If provided, an Image.asset will be drawn at the base of the campfire.
-  final String? logsAssetPath;
+  final bool showVectorLogs;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +42,7 @@ class SoundscapeBackground extends StatelessWidget {
       case Soundscape.waves:
         return _Ocean(intensity: intensity, oceanLevel: oceanLevel);
       case Soundscape.campfire:
-        return _Campfire(intensity: intensity, logsAssetPath: logsAssetPath);
+        return _Campfire(intensity: intensity, showVectorLogs: showVectorLogs);
     }
   }
 }
@@ -52,11 +59,9 @@ class _RainySky extends StatelessWidget {
     const bottom = Color(0xFF0E1A2B);
     return Stack(children: [
       const _GradientFill(top: top, bottom: bottom),
-      _RainLayer(dropCount: (220 * intensity).round()),
-      // base drizzle
-      _RainStreakLayer(count: (60 * intensity).round()),
-      // NEW: falling streaks from top
-      const _LowMist(),
+      _RainLayer(dropCount: (110 * intensity).round()),
+      _RainStreakLayer(count: (20 * intensity).round()),
+      // const LowMist(),
     ]);
   }
 }
@@ -116,9 +121,8 @@ class _RainLayerState extends State<_RainLayer>
         ..addAll(List.generate(widget.dropCount, (_) {
           final x = rnd.nextDouble() * size.width;
           final y = rnd.nextDouble() * size.height;
-          final speed =
-              520 + rnd.nextDouble() * 340; // a bit slower for visibility
-          final angle = pi * 1.12; // slightly slanted
+          final speed = 520 + rnd.nextDouble() * 340;
+          final angle = pi * 1.12;
           final v = Offset(cos(angle), sin(angle)) * speed;
           final len = 12 + rnd.nextDouble() * 18;
           final th = 0.9 + rnd.nextDouble() * 0.7;
@@ -131,12 +135,10 @@ class _RainLayerState extends State<_RainLayer>
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: CustomPaint(
-        painter: _RainPainter(drops, ripples,
-            baseCount: widget.dropCount, onEnsure: _ensure, repaint: _ctrl),
-        size: Size.infinite,
-      ),
-    );
+        child: CustomPaint(
+            painter: _RainPainter(drops, ripples,
+                baseCount: widget.dropCount, onEnsure: _ensure, repaint: _ctrl),
+            size: Size.infinite));
   }
 }
 
@@ -160,10 +162,7 @@ class _RainPainter extends CustomPainter {
     final now = DateTime.now().millisecondsSinceEpoch;
     final dt = (now - last) / 1000.0;
     last = now;
-
     final p = Paint()..strokeCap = StrokeCap.round;
-
-    // burst scheduling and top-up to maintain drizzle with periodic bursts
     _burstClock += dt;
     if (_burstClock > _nextBurst) {
       _burstClock = 0;
@@ -172,8 +171,6 @@ class _RainPainter extends CustomPainter {
     }
     final target =
         baseCount + (_burstTimer > 0 ? (baseCount * 0.35).round() : 0);
-
-    // top-up
     while (drops.length < target) {
       final x = rnd.nextDouble() * size.width;
       final speed = 520 + rnd.nextDouble() * 340;
@@ -184,8 +181,6 @@ class _RainPainter extends CustomPainter {
       drops.add(_Drop(Offset(x, -10 - rnd.nextDouble() * 30), v, len, th));
     }
     if (_burstTimer > 0) _burstTimer -= dt;
-
-    // update & draw drops
     for (final d in drops) {
       d.p += d.v * dt;
       if (d.p.dy > size.height + 20) {
@@ -195,22 +190,17 @@ class _RainPainter extends CustomPainter {
         d.p =
             Offset(rnd.nextDouble() * size.width, -10 - rnd.nextDouble() * 40);
       }
-
-      // height-based opacity
       final heightFactor = (d.p.dy / size.height).clamp(0.0, 1.0);
       final opacity = 0.22 + (0.38 * heightFactor);
       p
         ..color = _op(Colors.white, opacity)
         ..strokeWidth = d.thickness;
-
       canvas.drawLine(d.p, d.p - d.v.normalized() * d.len, p);
       final head = Paint()
         ..color = _op(Colors.white, opacity * 0.8)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(d.p, d.thickness * 0.55, head);
     }
-
-    // ripples
     final rp = Paint()..style = PaintingStyle.stroke;
     ripples.removeWhere((r) {
       r.age += dt;
@@ -230,7 +220,7 @@ class _RainPainter extends CustomPainter {
   bool shouldRepaint(covariant _RainPainter old) => true;
 }
 
-// NEW: top emitter layer for long rain streaks (more dramatic, like flames but inverted)
+// top emitter for long streaks
 class _RainStreakLayer extends StatefulWidget {
   const _RainStreakLayer({required this.count});
 
@@ -280,7 +270,7 @@ class _RainStreakLayerState extends State<_RainStreakLayer>
           final x = rnd.nextDouble() * s.width;
           final y = -20 - rnd.nextDouble() * 80;
           final len = 28 + rnd.nextDouble() * 54;
-          final speed = 260 + rnd.nextDouble() * 220; // px/s
+          final speed = 260 + rnd.nextDouble() * 220;
           final life = 0.9 + rnd.nextDouble() * 0.8;
           final th = 1.0 + rnd.nextDouble() * 0.8;
           return _Streak(
@@ -323,7 +313,6 @@ class _RainStreakPainter extends CustomPainter {
       s.age += dt;
       s.p = Offset(s.p.dx, s.p.dy + s.speed * dt);
       if (s.age > s.life || s.p.dy > size.height + 40) {
-        // respawn at top
         s.p =
             Offset(rnd.nextDouble() * size.width, -20 - rnd.nextDouble() * 80);
         s.len = 28 + rnd.nextDouble() * 54;
@@ -333,7 +322,7 @@ class _RainStreakPainter extends CustomPainter {
         s.th = 1.0 + rnd.nextDouble() * 0.8;
       }
       final t = (1 - s.age / s.life).clamp(0.0, 1.0);
-      final op = 0.20 + 0.60 * t; // fade out over life
+      final op = 0.20 + 0.60 * t;
       core
         ..color = _op(Colors.white, op * 0.9)
         ..strokeWidth = s.th;
@@ -349,59 +338,6 @@ class _RainStreakPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RainStreakPainter old) => true;
-}
-
-class _LowMist extends StatefulWidget {
-  const _LowMist({super.key});
-
-  @override
-  State<_LowMist> createState() => _LowMistState();
-}
-
-class _LowMistState extends State<_LowMist>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c;
-
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(seconds: 6))
-      ..repeat();
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-        child: CustomPaint(
-            painter: _MistPainter(repaint: _c), size: Size.infinite));
-  }
-}
-
-class _MistPainter extends CustomPainter {
-  _MistPainter({required Listenable repaint}) : super(repaint: repaint);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final t = DateTime.now().millisecondsSinceEpoch / 1000.0;
-    final g = Paint()
-      ..shader = ui.Gradient.linear(
-          Offset(0, size.height * 0.6), Offset(0, size.height), [
-        _op(Colors.white, 0.02 + 0.02 * (0.5 + 0.5 * sin(t * 0.5))),
-        _op(Colors.white, 0.10)
-      ]);
-    canvas.drawRect(
-        Rect.fromLTWH(0, size.height * 0.55, size.width, size.height * 0.45),
-        g);
-  }
-
-  @override
-  bool shouldRepaint(covariant _MistPainter old) => true;
 }
 
 // ====== OCEAN / WAVES ======================================================
@@ -512,11 +448,9 @@ class _WavesPainter extends CustomPainter {
 
 class _MoonGlow extends StatelessWidget {
   const _MoonGlow({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-        child: CustomPaint(size: Size.infinite, painter: _MoonPainter()));
+    return IgnorePointer(child: CustomPaint(size: Size.infinite, painter: _MoonPainter()));
   }
 }
 
@@ -524,53 +458,175 @@ class _MoonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width * 0.82, size.height * 0.13);
+
+// moon glow
     final glow = Paint()
       ..color = _op(Colors.white, 0.12)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 26);
     canvas.drawCircle(center, 60, glow);
+
+
+// moon core
     final core = Paint()..color = _op(Colors.white, 0.8);
     canvas.drawCircle(center, 10, core);
-    final strip = Rect.fromLTWH(
-        size.width * 0.68, size.height * 0.58, size.width * 0.22, 6);
-    final grad = Paint()
-      ..shader = ui.Gradient.linear(strip.topLeft, strip.topRight, [
-        _op(Colors.white, 0.0),
-        _op(Colors.white, 0.4),
-        _op(Colors.white, 0.0)
-      ]);
-    canvas.drawRect(strip, grad);
-  }
 
+
+// water reflection strip (3 colors → provide 3 stops)
+    final strip = Rect.fromLTWH(size.width * 0.68, size.height * 0.58, size.width * 0.22, 6);
+    final reflection = Paint()
+      ..shader = ui.Gradient.linear(
+        strip.topLeft,
+        strip.topRight,
+        [
+          _op(Colors.white, 0.0),
+          _op(Colors.white, 0.40),
+          _op(Colors.white, 0.0),
+        ],
+        const [0.0, 0.5, 1.0],
+      );
+    canvas.drawRect(strip, reflection);
+  }
   @override
   bool shouldRepaint(covariant _MoonPainter old) => false;
 }
 
 // ====== CAMPFIRE ===========================================================
 class _Campfire extends StatelessWidget {
-  const _Campfire({required this.intensity, this.logsAssetPath});
+  const _Campfire({required this.intensity, required this.showVectorLogs});
 
   final double intensity;
-  final String? logsAssetPath;
+  final bool showVectorLogs;
 
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
       const _GradientFill(top: Color(0xFF1A0C07), bottom: Color(0xFF2A120A)),
-      if (logsAssetPath != null)
-        Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: IgnorePointer(
-                child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Image.asset(logsAssetPath!,
-                        width: MediaQuery.of(context).size.width * 0.55,
-                        fit: BoxFit.contain)))),
-      _EmberLayer(count: (90 * intensity).round()),
+      if (showVectorLogs) const _VectorLogs(),
+      // const _FlameCore(),
+      _EmberLayer(count: (40 * intensity).round()),
       const _WarmFlicker(),
     ]);
   }
+}
+class _FlameCore extends StatefulWidget {
+  const _FlameCore({super.key});
+  @override
+  State<_FlameCore> createState() => _FlameCoreState();
+}
+
+
+class _FlameCoreState extends State<_FlameCore> with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(child: CustomPaint(size: Size.infinite, painter: _FlameCorePainter(repaint: _c)));
+  }
+}
+
+// NEW: procedural flame core at the base (ignition point)
+// ---- CAMPFIRE: Flame core painter with explicit stops ---------------------
+class _FlameCorePainter extends CustomPainter {
+  _FlameCorePainter({required Listenable repaint}) : super(repaint: repaint);
+
+  Path _flamePath(double cx, double baseY, double h, double w, double sway) {
+    final p = Path();
+    p.moveTo(cx - w / 2, baseY);
+    p.cubicTo(cx - w / 2, baseY - h * 0.35, cx - w * 0.25 + sway, baseY - h * 0.75, cx, baseY - h);
+    p.cubicTo(cx + w * 0.25 + sway, baseY - h * 0.75, cx + w / 2, baseY - h * 0.35, cx + w / 2, baseY);
+    p.close();
+    return p;
+  }
+
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    final cx = size.width * 0.5;
+    final baseY = size.height * 0.90;
+
+
+// Strong ignition disk (3 colors → provide 3 stops)
+    final strong = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(cx, baseY),
+        140,
+        [
+          _op(const Color(0xFFFFB469), 0.55),
+          _op(const Color(0xFFFF7A3A), 0.20),
+          _op(Colors.transparent, 0.0),
+        ],
+        const [0.0, 0.6, 1.0],
+      );
+    canvas.drawCircle(Offset(cx, baseY), 40, strong);
+
+
+// Layered flame shapes
+    final layers = [
+      [30.0, 20.0, const Color(0xFFFFE3A1), const Color(0xFFFF9A4D), 18.0, 1.3],
+      [42.0, 60.0, const Color(0xFFFFD27A), const Color(0xFFFF7A3A), 14.0, 1.7],
+      [64.0, 70.0, const Color(0xFFFFC05C), const Color(0xFFFF5E2B), 10.0, 2.2],
+    ];
+
+
+    for (final L in layers) {
+      final h = L[0] as double;
+      final w = L[1] as double;
+      final top = L[2] as Color;
+      final base = L[3] as Color;
+      final blur = L[4] as double;
+      final sp = L[5] as double;
+
+
+      final sway = sin(t * sp) * 8.0;
+      final path = _flamePath(cx, baseY, h, w + sin(t * sp * 0.7) * 8, sway);
+
+
+      final glow = Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(cx, baseY),
+          Offset(cx, baseY - h),
+          [
+            _op(base, 0.35),
+            _op(top, 0.0),
+          ],
+        )
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
+
+
+      final grad = Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(cx, baseY),
+          Offset(cx, baseY - h),
+          [
+            _op(base, 0.85),
+            _op(top, 0.65),
+            _op(top, 0.0),
+          ],
+          const [0.0, 0.35, 1.0],
+        );
+
+
+      canvas.drawPath(path, glow);
+      canvas.drawPath(path, grad);
+    }
+  }
+
+
+  @override
+  bool shouldRepaint(covariant _FlameCorePainter oldDelegate) => true;
 }
 
 class _Ember {
@@ -657,14 +713,6 @@ class _EmberPainter extends CustomPainter {
     final halo = Paint()
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     final core = Paint();
-
-    // brighter ignition base glow (more visible at the base)
-    final origin = Offset(size.width * 0.5, size.height * 0.9);
-    final baseStrong = Paint()
-      ..shader = ui.Gradient.radial(origin, 130,
-          [_op(const Color(0xFFFFA95C), 0.38), _op(Colors.transparent, 0.0)]);
-    canvas.drawCircle(origin, 130, baseStrong);
-
     for (final e in embers) {
       e.age += dt;
       if (e.age > e.life) {
@@ -675,16 +723,15 @@ class _EmberPainter extends CustomPainter {
             (rnd.nextDouble() - 0.5) * 18, -(36 + rnd.nextDouble() * 64));
       }
       e.p += e.v * dt;
-      e.v = Offset(e.v.dx * 0.985, e.v.dy - 8 * dt); // buoyancy
+      e.v = Offset(e.v.dx * 0.985, e.v.dy - 8 * dt);
       final t = (1 - e.age / e.life).clamp(0.0, 1.0);
       final c =
           Color.lerp(const Color(0xFFFFC37A), const Color(0xFFFF5E2B), 1 - t)!;
-      // Slight attenuation near bottom (reduced -> brighter at base)
-      final bf = ((e.p.dy - size.height * 0.75) / (size.height * 0.25))
+      final bf = ((e.p.dy - size.height * 0.78) / (size.height * 0.22))
           .clamp(0.0, 1.0);
-      final atten = 1.0 - 0.12 * bf; // was 0.45 (too dim)
+      final atten = 1.0 - 0.08 * bf;
       halo.color = _op(c, 0.22 * t * atten);
-      core.color = _op(c, 0.90 * t * atten);
+      core.color = _op(c, 0.92 * t * atten);
       canvas.drawCircle(e.p, e.r * 2.6, halo);
       canvas.drawCircle(e.p, e.r, core);
     }
@@ -758,4 +805,49 @@ extension on Offset {
   Offset operator -(Offset o) => Offset(dx - o.dx, dy - o.dy);
 
   Offset operator *(double s) => Offset(dx * s, dy * s);
+}
+
+// Optional: simple vector logs (off by default)
+class _VectorLogs extends StatelessWidget {
+  const _VectorLogs({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+        child: CustomPaint(size: Size.infinite, painter: _LogsPainter()));
+  }
+}
+
+class _LogsPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width * 0.5;
+    final y = size.height * 0.92;
+    final rrect = (Rect rect, double r) =>
+        RRect.fromRectAndRadius(rect, Radius.circular(r));
+    Paint logPaint(Color c) => Paint()
+      ..color = c
+      ..style = PaintingStyle.fill;
+    final brown = const Color(0xFF694428);
+    final dark = const Color(0xFF4A2E1C);
+    canvas.save();
+    canvas.translate(cx - 90, y - 12);
+    canvas.rotate(-0.25);
+    canvas.drawRRect(
+        rrect(const Rect.fromLTWH(0, 0, 180, 26), 13), logPaint(brown));
+    canvas.drawRRect(
+        rrect(const Rect.fromLTWH(12, 5, 156, 16), 10), logPaint(dark));
+    canvas.restore();
+    canvas.save();
+    canvas.translate(cx - 90, y - 12);
+    canvas.rotate(0.25);
+    canvas.drawRRect(
+        rrect(const Rect.fromLTWH(0, 0, 180, 26), 13), logPaint(brown));
+    canvas.drawRRect(
+        rrect(const Rect.fromLTWH(12, 5, 156, 16), 10), logPaint(dark));
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _LogsPainter oldDelegate) => false;
 }

@@ -81,6 +81,9 @@ class AudioControls extends StatelessWidget {
 
   Widget _buildVolumeControl(BuildContext context) {
     return IconButton(
+      style: IconButton.styleFrom(
+        foregroundColor: Theme.of(context).colorScheme.primary,
+      ),
       icon: const Icon(Icons.volume_up),
       onPressed: () => _showVolumeDialog(context),
     );

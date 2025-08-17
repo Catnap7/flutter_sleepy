@@ -4,6 +4,8 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_sleepy/data/tracks.dart';
 import 'package:flutter_sleepy/screens/explain_screen.dart';
 import 'package:flutter_sleepy/services/audio_service.dart';
+import 'package:flutter_sleepy/theme/app_theme.dart';
+import 'package:flutter_sleepy/ui/themed_action_button.dart';
 import 'package:flutter_sleepy/utils/battery_optimization.dart';
 import 'package:flutter_sleepy/utils/duration_formatter.dart';
 import 'package:flutter_sleepy/widgets/audio_controls.dart';
@@ -152,47 +154,60 @@ class _AudioHomePageState extends State<AudioHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: _buildAppBar(),
-      body: SoundReactiveBackground(
-        currentSoundKey: TracksData.tracks[_selectedIndex].title,
-        intensity: widget.controller.bgIntensity,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
 
-                _glass(
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: SoundSelectorCard(
-                      value: TracksData.tracks[_selectedIndex].title.toLowerCase(),
-                      onChanged: _onSoundKeyChanged,
+    final baseTheme = Theme.of(context);
+    final currentTitle = TracksData.tracks[_selectedIndex].title; // e.g. "Rainy"
+
+// Map the current sound to an accent and tint the local theme
+    final accent = AppSoundAccent.fromTitle(currentTitle);
+    final tinted = AppThemeAccentAPI.withSoundAccent(baseTheme, accent,
+        recolorSecondary: false // set true if you want secondary/tertiary to shift too
+    );
+
+    return Theme(
+      data: tinted,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: Colors.transparent,
+        appBar: _buildAppBar(),
+        body: SoundReactiveBackground(
+          currentSoundKey: TracksData.tracks[_selectedIndex].title,
+          intensity: widget.controller.bgIntensity,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+
+                  _glass(
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: SoundSelectorCard(
+                        value: TracksData.tracks[_selectedIndex].title.toLowerCase(),
+                        onChanged: _onSoundKeyChanged,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                AudioControls(
-                  _audioService.player,
-                  onPlayPauseChanged: (isPlaying) => _sendNowPlayingUpdate(),
-                ),
-                const SizedBox(height: 20),
-                _glass(
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: _buildTimerSection(),
+                  const SizedBox(height: 20),
+                  AudioControls(
+                    _audioService.player,
+                    onPlayPauseChanged: (isPlaying) => _sendNowPlayingUpdate(),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.center,
-                  child: _buildHowItWorksButton(),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  _glass(
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: _buildTimerSection(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.center,
+                    child: _buildHowItWorksButton(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -205,18 +220,21 @@ class _AudioHomePageState extends State<AudioHomePage> {
       backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      actions: [
+      actions: [/*
         IconButton(
           tooltip: 'Theme',
           icon: const Icon(Icons.color_lens_outlined),
-          onPressed: () => Navigator.of(context).pushNamed('/theme-settings'),
-        ),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ThemeSettingsScreen(controller: controller)),
+          ),
+        ),*/
       ],
       title: const Text('Sleepy Audio'),
     );
   }
 
-  Widget _buildTrackInfo() {
+/*  Widget _buildTrackInfo() {
     return StreamBuilder<SequenceState?>(
       stream: _audioService.player.sequenceStateStream,
       builder: (context, _) {
@@ -226,9 +244,9 @@ class _AudioHomePageState extends State<AudioHomePage> {
         );
       },
     );
-  }
+  }*/
 
-  Widget _buildTrackSelector() {
+ /* Widget _buildTrackSelector() {
     return DropdownButton<int>(
       value: _selectedIndex,
       dropdownColor: Theme.of(context).colorScheme.surface,
@@ -240,16 +258,16 @@ class _AudioHomePageState extends State<AudioHomePage> {
       items: _buildTrackItems(),
       onChanged: _onTrackChanged,
     );
-  }
+  }*/
 
-  List<DropdownMenuItem<int>> _buildTrackItems() {
+  /*List<DropdownMenuItem<int>> _buildTrackItems() {
     return TracksData.tracks.asMap().entries.map((entry) {
       return DropdownMenuItem<int>(
         value: entry.key,
         child: Text(entry.value.title),
       );
     }).toList();
-  }
+  }*/
 
   Widget _buildTimerSection() {
     return Column(
@@ -352,7 +370,9 @@ class _AudioHomePageState extends State<AudioHomePage> {
       {'label': '10m', 'duration': const Duration(minutes: 10)},
       {'label': '15m', 'duration': const Duration(minutes: 15)},
       {'label': '30m', 'duration': const Duration(minutes: 30)},
+      {'label': '45m', 'duration': const Duration(minutes: 45)},
       {'label': '1h', 'duration': const Duration(hours: 1)},
+      {'label': '2h', 'duration': const Duration(hours: 2)},
     ];
 
     return timerDurations.map((timer) {
@@ -368,17 +388,13 @@ class _AudioHomePageState extends State<AudioHomePage> {
   }
 
   Widget _buildHowItWorksButton() {
-    return ElevatedButton(
+    return ThemedActionButton(
+      label: 'How It Works',
+      icon: Icons.auto_awesome_rounded,
       onPressed: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ExplainScreen()),
       ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-        foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-      ),
-      child: const Text('How It Works'),
     );
   }
 

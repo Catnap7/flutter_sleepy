@@ -4,6 +4,8 @@
 
 import 'package:flutter/material.dart';
 
+enum SoundAccent { rainy, waves, campfire }
+
 // ===== Design Tokens (ThemeExtensions) =====
 class AppSpacing extends ThemeExtension<AppSpacing> {
   final double xs; // 4
@@ -79,7 +81,7 @@ class AppRadii extends ThemeExtension<AppRadii> {
 // ===== Color Schemes (seed based) =====
 class AppColors {
   // Vibrant, modern aqua as the primary brand seed (Day mode)
-  static const Color seed = Color(0xFF00C2B8);
+  static const Color seed = Color(0xFFC20000);
 
   static final ColorScheme light = ColorScheme.fromSeed(
     seedColor: seed,
@@ -103,15 +105,18 @@ class AppColors {
 
 // Sleep-optimized palette: muted, warm, low-stimulation
 class AppSleepColors {
-  static const Color seed = Color(0xFF5B4B8A); // muted soft purple
+  static const Color seed = Color(0xFF424B77); // muted soft purple
 
   static final ColorScheme light = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
   ).copyWith(
-    primary: const Color(0xFF6E5AA8), // softened primary
-    secondary: const Color(0xFF9B8EC1), // mauve accent
-    tertiary: const Color(0xFFBFAF9F), // warm gray accent
+    primary: const Color(0xFF1A080D),
+    // softened primary
+    secondary: const Color(0xFF9B8EC1),
+    // mauve accent
+    tertiary: const Color(0xFFBFAF9F),
+    // warm gray accent
     error: const Color(0xFFCF6679),
     surface: const Color(0xFFF5F3F8),
     surfaceTint: const Color(0xFF6E5AA8),
@@ -146,28 +151,39 @@ class AppTypography {
   }
 }
 
-// ===== Theming Entrypoints =====
 class AppTheme {
-  static ThemeData light() {
-    final cs = AppColors.light;
+  // New: build everything using an arbitrary ColorScheme
+  static ThemeData fromScheme(ColorScheme cs) => _baseWithScheme(cs);
+
+  static ThemeData light() => _baseWithScheme(AppColors.light);
+
+  static ThemeData dark() => _baseWithScheme(AppColors.dark);
+
+  static ThemeData sleepLight() => _baseWithScheme(AppSleepColors.light);
+
+  static ThemeData sleepDark() => _baseWithScheme(AppSleepColors.dark);
+
+  static ThemeData _baseWithScheme(ColorScheme cs) {
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: cs,
-      brightness: Brightness.light,
+      brightness: cs.brightness,
     );
 
+    final tt = AppTypography.textTheme(base.textTheme);
+
     return base.copyWith(
-      textTheme: AppTypography.textTheme(base.textTheme),
+      textTheme: tt,
       scaffoldBackgroundColor: cs.surface,
       extensions: const [AppSpacing(), AppRadii()],
 
       // AppBar
-      appBarTheme: AppBarTheme(
+      appBarTheme: base.appBarTheme.copyWith(
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: AppTypography.textTheme(base.textTheme).titleLarge,
+        titleTextStyle: tt.titleLarge,
       ),
 
       // Buttons
@@ -175,14 +191,16 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(const AppRadii().md)),
+            borderRadius: BorderRadius.circular(const AppRadii().md),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(const AppRadii().md)),
+            borderRadius: BorderRadius.circular(const AppRadii().md),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
       ),
@@ -190,12 +208,13 @@ class AppTheme {
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(const AppRadii().sm)),
+            borderRadius: BorderRadius.circular(const AppRadii().sm),
+          ),
         ),
       ),
 
       // Inputs
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: base.inputDecorationTheme.copyWith(
         filled: true,
         fillColor: cs.surfaceTint.withAlpha(80),
         contentPadding:
@@ -215,16 +234,17 @@ class AppTheme {
       ),
 
       // Cards
-      cardTheme: CardThemeData(
+      cardTheme: base.cardTheme.copyWith(
         color: cs.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(const AppRadii().lg)),
+          borderRadius: BorderRadius.circular(const AppRadii().lg),
+        ),
       ),
 
       // Navigation Bar (bottom)
-      navigationBarTheme: NavigationBarThemeData(
+      navigationBarTheme: base.navigationBarTheme.copyWith(
         height: 64,
         indicatorColor: cs.secondaryContainer,
         surfaceTintColor: Colors.transparent,
@@ -245,50 +265,24 @@ class AppTheme {
       // Chips
       chipTheme: base.chipTheme.copyWith(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(const AppRadii().sm)),
+          borderRadius: BorderRadius.circular(const AppRadii().sm),
+        ),
       ),
 
-      // Dialogs/BottomSheets
-      dialogTheme: DialogThemeData(
+      // Dialogs / BottomSheets
+      dialogTheme: base.dialogTheme.copyWith(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(const AppRadii().lg)),
+          borderRadius: BorderRadius.circular(const AppRadii().lg),
+        ),
       ),
-      bottomSheetTheme: BottomSheetThemeData(
+      bottomSheetTheme: base.bottomSheetTheme.copyWith(
         shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(const AppRadii().lg)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(const AppRadii().lg),
+          ),
         ),
         showDragHandle: true,
       ),
-    );
-  }
-
-  static ThemeData dark() {
-    final cs = AppColors.dark;
-
-    return light().copyWith(
-      colorScheme: cs,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: cs.surface,
-    );
-  }
-
-  // Sleep mode variants (muted, warm tones optimized for bedtime)
-  static ThemeData sleepLight() {
-    final cs = AppSleepColors.light;
-    final base = light();
-    return base.copyWith(
-      colorScheme: cs,
-      scaffoldBackgroundColor: cs.surface,
-    );
-  }
-
-  static ThemeData sleepDark() {
-    final cs = AppSleepColors.dark;
-    final base = dark();
-    return base.copyWith(
-      colorScheme: cs,
-      scaffoldBackgroundColor: cs.surface,
     );
   }
 }
@@ -300,84 +294,106 @@ extension SpacingX on BuildContext {
   AppRadii get radii => Theme.of(this).extension<AppRadii>()!;
 }
 
+/// Helpers to map a sound title/key to an accent and to a seed color.
+class AppSoundAccent {
+  static SoundAccent fromTitle(String title) {
+    final t = title.trim().toLowerCase();
+    if (t.contains('wave')) return SoundAccent.waves;
+    if (t.replaceAll(' ', '') == 'campfire') return SoundAccent.campfire;
+    return SoundAccent.rainy;
+  }
 
+  /// Base (seed) colors for each sound. Tuned to be calm at night.
+  static Color seed(SoundAccent a) {
+    switch (a) {
+      case SoundAccent.rainy:
+        return const Color(0xFF6FA7FF); // gentle rainy blue
+      case SoundAccent.waves:
+        return const Color(0xFF00C2B8); // aqua/teal
+      case SoundAccent.campfire:
+        return const Color(0xFFFF8A3D); // warm fire orange
+    }
+  }
+}
 
-// ===== Example usage widget =====
-class ThemedExample extends StatelessWidget {
-  const ThemedExample({super.key});
+extension _AppThemeAccent on ThemeData {
+  BorderRadius _resolveOutlineRadius(ThemeData base) {
+    final b = base.inputDecorationTheme.border;
+    if (b is OutlineInputBorder) return b.borderRadius;
+    return BorderRadius.circular(16);
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final sp = context.sp;
-    final cs = Theme.of(context).colorScheme;
+  ThemeData _overrideWithAccent(SoundAccent accent,
+      {bool recolorSecondary = false}) {
+    final base = this;
+    final cs = colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Redesign Starter')),
-      body: Padding(
-        padding: EdgeInsets.all(sp.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Hello, JAEWOO',
-                style: Theme.of(context).textTheme.headlineLarge),
-            SizedBox(height: sp.lg),
-            TextField(decoration: const InputDecoration(hintText: 'Search…')),
-            SizedBox(height: sp.lg),
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(sp.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Quick actions',
-                        style: Theme.of(context).textTheme.titleLarge),
-                    SizedBox(height: sp.sm),
-                    Wrap(spacing: sp.sm, runSpacing: sp.sm, children: [
-                      FilledButton(
-                          onPressed: () {}, child: const Text('Primary')),
-                      ElevatedButton(
-                          onPressed: () {}, child: const Text('Elevated')),
-                      OutlinedButton(
-                          onPressed: () {}, child: const Text('Outlined')),
-                      TextButton(onPressed: () {}, child: const Text('Text')),
-                    ]),
-                  ],
-                ),
-              ),
-            ),
-            const Spacer(),
-            Container(
-              padding: EdgeInsets.all(sp.lg),
-              decoration: BoxDecoration(
-                color: cs.secondaryContainer,
-                borderRadius: BorderRadius.circular(context.radii.lg),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline),
-                  SizedBox(width: sp.md),
-                  const Expanded(
-                      child: Text(
-                          'Tip: swap your seed color to instantly rebrand.')),
-                ],
-              ),
-            ),
-          ],
+// Build a tiny seed scheme for the same brightness so tones are valid.
+    final seed = ColorScheme.fromSeed(
+      seedColor: AppSoundAccent.seed(accent),
+      brightness: cs.brightness,
+    );
+
+    final next = cs.copyWith(
+// Always override primary + its containers for consistent buttons/inputs.
+      primary: seed.primary,
+      onPrimary: seed.onPrimary,
+      primaryContainer: seed.primaryContainer,
+      onPrimaryContainer: seed.onPrimaryContainer,
+// Optional: also recolor secondary/tertiary to lean into the mood.
+      secondary: recolorSecondary ? seed.secondary : cs.secondary,
+      onSecondary: recolorSecondary ? seed.onSecondary : cs.onSecondary,
+      secondaryContainer:
+          recolorSecondary ? seed.secondaryContainer : cs.secondaryContainer,
+      onSecondaryContainer: recolorSecondary
+          ? seed.onSecondaryContainer
+          : cs.onSecondaryContainer,
+      tertiary: recolorSecondary ? seed.tertiary : cs.tertiary,
+      onTertiary: recolorSecondary ? seed.onTertiary : cs.onTertiary,
+      tertiaryContainer:
+          recolorSecondary ? seed.tertiaryContainer : cs.tertiaryContainer,
+      onTertiaryContainer:
+          recolorSecondary ? seed.onTertiaryContainer : cs.onTertiaryContainer,
+    );
+
+    final br = _resolveOutlineRadius(this);
+// Most of your sub-themes already read from ColorScheme, so a simple
+// copyWith is enough.
+    return copyWith(
+      colorScheme: next,
+// Keep scaffold background tied to surface to avoid tone jumps.
+      scaffoldBackgroundColor: next.surface,
+// Optional: tweak slider colors to ensure coherence if you set them explicitly.
+      sliderTheme: sliderTheme.copyWith(
+        activeTrackColor: next.primary,
+        inactiveTrackColor: next.primary.withOpacity(0.3),
+        thumbColor: next.primary,
+        overlayColor: next.primary.withOpacity(0.12),
+      ),
+// Optional: make focused input border follow the accent.
+      inputDecorationTheme: inputDecorationTheme.copyWith(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: br,
+          borderSide: BorderSide(color: next.primary, width: 2),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
-          NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Me'),
-        ],
-      ),
     );
+  }
+}
+
+class AppThemeAccentAPI {
+  /// Public API to generate an accented theme from an existing ThemeData.
+  static ThemeData withSoundAccent(ThemeData base, SoundAccent accent,
+      {bool recolorSecondary = false}) {
+    return base._overrideWithAccent(accent, recolorSecondary: recolorSecondary);
+  }
+}
+
+// Convenience re-export on your existing AppTheme class (optional):
+extension AppThemeX on AppTheme {
+  static ThemeData withSoundAccent(ThemeData base, SoundAccent accent,
+      {bool recolorSecondary = false}) {
+    return AppThemeAccentAPI.withSoundAccent(base, accent,
+        recolorSecondary: recolorSecondary);
   }
 }

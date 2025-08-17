@@ -1,53 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/theme/app_theme.dart'; // for context.sp / context.radii
 
-/// Displays a dialog that allows the user to pick a custom duration
-/// using a slider. The caller can specify the minimum and maximum
-/// number of minutes available. The dialog returns a [Duration]
-/// representing the user's selection when the "Set" button is pressed,
-/// or `null` if the dialog is dismissed.
+/// A custom-themable timer dialog that respects your AppTheme
+/// (spacing/radii tokens) and per-sound accent via current ColorScheme.
 Future<Duration?> showCustomTimerDialog({
   required BuildContext context,
   int minMinutes = 1,
   int maxMinutes = 120,
   int initialMinutes = 30,
 }) async {
-  double selectedMinutes = initialMinutes.toDouble().clamp(minMinutes.toDouble(), maxMinutes.toDouble());
+  assert(minMinutes > 0 && maxMinutes >= minMinutes);
+
+  double selected = initialMinutes
+      .clamp(minMinutes, maxMinutes)
+      .toDouble();
+
+  final theme = Theme.of(context);
+  final cs = theme.colorScheme;
 
   return showDialog<Duration>(
     context: context,
-    builder: (context) {
+    builder: (ctx) {
       return AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(
-          'Custom Timer Setting',
-          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.radii.lg),
+        ),
+        titlePadding: EdgeInsets.fromLTRB(
+          context.sp.lg, context.sp.lg, context.sp.lg, context.sp.sm,
+        ),
+        contentPadding: EdgeInsets.fromLTRB(
+          context.sp.lg, context.sp.md, context.sp.lg, context.sp.md,
+        ),
+        actionsPadding: EdgeInsets.fromLTRB(
+          context.sp.lg, 0, context.sp.lg, context.sp.lg,
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.timer_rounded, size: 20, color: cs.primary),
+            SizedBox(width: context.sp.sm),
+            Text(
+              'Custom Timer',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         content: StatefulBuilder(
           builder: (context, setState) {
             return SizedBox(
-              height: 120,
+              width: 360,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${selectedMinutes.round()} Min',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    '${selected.round()} min',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  SizedBox(height: context.sp.md),
                   Slider(
-                    value: selectedMinutes,
+                    value: selected,
                     min: minMinutes.toDouble(),
                     max: maxMinutes.toDouble(),
-                    divisions: maxMinutes - minMinutes,
-                    label: '${selectedMinutes.round()} Min',
-                    onChanged: (value) {
-                      setState(() {
-                        selectedMinutes = value;
-                      });
-                    },
+                    divisions: (maxMinutes - minMinutes) > 0
+                        ? (maxMinutes - minMinutes)
+                        : null,
+                    label: '${selected.round()} min',
+                    onChanged: (v) => setState(() => selected = v),
                   ),
                 ],
               ),
@@ -56,19 +81,14 @@ Future<Duration?> showCustomTimerDialog({
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('cancel', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
-              final minutes = selectedMinutes.round();
-              Navigator.of(context).pop(Duration(minutes: minutes));
+              Navigator.of(ctx).pop(Duration(minutes: selected.round()));
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-              foregroundColor: Theme.of(context).colorScheme.onSecondary,
-            ),
-            child: const Text('ok'),
+            child: const Text('Set'),
           ),
         ],
       );
