@@ -20,9 +20,9 @@ class AudioControls extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withAlpha(15),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withAlpha(20)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

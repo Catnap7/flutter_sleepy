@@ -13,7 +13,7 @@ void showSliderDialog({
   showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: Colors.blueGrey[800],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       title: Text(
         title,
         style: TextStyle(color: Theme.of(context).colorScheme.primary),

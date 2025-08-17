@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 Future<Duration?> showCustomTimerDialog({
   required BuildContext context,
   int minMinutes = 1,
-  int maxMinutes = 180,
+  int maxMinutes = 120,
   int initialMinutes = 30,
 }) async {
   double selectedMinutes = initialMinutes.toDouble().clamp(minMinutes.toDouble(), maxMinutes.toDouble());
@@ -17,9 +17,10 @@ Future<Duration?> showCustomTimerDialog({
     context: context,
     builder: (context) {
       return AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
-          '커스텀 타이머 설정',
-          style: const TextStyle(color: Colors.tealAccent),
+          'Custom Timer Setting',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
         ),
         content: StatefulBuilder(
           builder: (context, setState) {
@@ -29,9 +30,9 @@ Future<Duration?> showCustomTimerDialog({
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '${selectedMinutes.round()} 분',
-                    style: const TextStyle(
-                      color: Colors.tealAccent,
+                    '${selectedMinutes.round()} Min',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -41,7 +42,7 @@ Future<Duration?> showCustomTimerDialog({
                     min: minMinutes.toDouble(),
                     max: maxMinutes.toDouble(),
                     divisions: maxMinutes - minMinutes,
-                    label: '${selectedMinutes.round()} 분',
+                    label: '${selectedMinutes.round()} Min',
                     onChanged: (value) {
                       setState(() {
                         selectedMinutes = value;
@@ -56,7 +57,7 @@ Future<Duration?> showCustomTimerDialog({
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소', style: TextStyle(color: Colors.tealAccent)),
+            child: Text('cancel', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -64,9 +65,10 @@ Future<Duration?> showCustomTimerDialog({
               Navigator.of(context).pop(Duration(minutes: minutes));
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              foregroundColor: Theme.of(context).colorScheme.onSecondary,
             ),
-            child: const Text('설정', style: TextStyle(color: Colors.white)),
+            child: const Text('ok'),
           ),
         ],
       );

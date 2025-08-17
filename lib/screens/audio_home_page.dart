@@ -10,13 +10,17 @@ import 'package:flutter_sleepy/widgets/audio_controls.dart';
 import 'package:flutter_sleepy/widgets/timer_button.dart';
 import 'package:flutter_sleepy/widgets/custom_timer_dialog.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:flutter_sleepy/ui/soundscape_adapter.dart';
+import 'package:flutter_sleepy/theme/theme_controller.dart';
+import 'package:flutter_sleepy/ui/sound_selector.dart';
 
 /// The main home page for the Sleepy Audio app.  It exposes controls
 /// for selecting the audio track, adjusting playback and timer
 /// settings, and navigating to an information screen.  The design
 /// follows a dark theme consistent with the rest of the application.
 class AudioHomePage extends StatefulWidget {
-  const AudioHomePage({super.key});
+  final ThemeController controller;
+  const AudioHomePage({super.key, required this.controller});
 
   @override
   State<AudioHomePage> createState() => _AudioHomePageState();
@@ -122,6 +126,23 @@ class _AudioHomePageState extends State<AudioHomePage> {
     }
   }
 
+  Future<void> _onSoundKeyChanged(String key) async {
+    final k = key.trim().toLowerCase();
+    int index;
+    if (k.contains('wave')) {
+      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('waves'));
+    } else if (k.replaceAll(' ', '') == 'campfire') {
+      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('camp fire'));
+    } else {
+      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('rainy'));
+    }
+    if (index < 0) index = 0;
+    if (index != _selectedIndex) {
+      setState(() => _selectedIndex = index);
+      await _setTrack(index);
+    }
+  }
+
   @override
   void dispose() {
     _audioService.dispose();
@@ -132,70 +153,65 @@ class _AudioHomePageState extends State<AudioHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: _buildAppBar(),
-      body: Stack(
-        children: [
-          // Subtle premium gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0B141A),
-                  Color(0xFF0F1E22),
-                  Color(0xFF102529),
-                ],
-              ),
+      body: SoundReactiveBackground(
+        currentSoundKey: TracksData.tracks[_selectedIndex].title,
+        intensity: widget.controller.bgIntensity,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+
+                _glass(
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SoundSelectorCard(
+                      value: TracksData.tracks[_selectedIndex].title.toLowerCase(),
+                      onChanged: _onSoundKeyChanged,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                AudioControls(
+                  _audioService.player,
+                  onPlayPauseChanged: (isPlaying) => _sendNowPlayingUpdate(),
+                ),
+                const SizedBox(height: 20),
+                _glass(
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: _buildTimerSection(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.center,
+                  child: _buildHowItWorksButton(),
+                ),
+              ],
             ),
           ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _glass(
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: _buildTrackInfo(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _glass(
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: _buildTrackSelector(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  AudioControls(
-                    _audioService.player,
-                    onPlayPauseChanged: (isPlaying) => _sendNowPlayingUpdate(),
-                  ),
-                  const SizedBox(height: 20),
-                  _glass(
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: _buildTimerSection(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.center,
-                    child: _buildHowItWorksButton(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      actions: [
+        IconButton(
+          tooltip: 'Theme',
+          icon: const Icon(Icons.color_lens_outlined),
+          onPressed: () => Navigator.of(context).pushNamed('/theme-settings'),
+        ),
+      ],
       title: const Text('Sleepy Audio'),
     );
   }
@@ -215,7 +231,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
   Widget _buildTrackSelector() {
     return DropdownButton<int>(
       value: _selectedIndex,
-      dropdownColor: Colors.blueGrey[800],
+      dropdownColor: Theme.of(context).colorScheme.surface,
       style: TextStyle(color: Theme.of(context).colorScheme.primary),
       underline: Container(
         height: 2,
@@ -260,7 +276,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
           fontWeight: FontWeight.bold,
           color: _remainingTime > Duration.zero
               ? Theme.of(context).colorScheme.primary
-              : Colors.white70,
+              : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -295,7 +311,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
             borderRadius: BorderRadius.circular(12.0),
           ),
         ),
-        child: const Text('커스텀'),
+        child: const Text('Custom'),
       ),
     ];
 
@@ -310,12 +326,13 @@ class _AudioHomePageState extends State<AudioHomePage> {
           style: ElevatedButton.styleFrom(
             padding:
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: Theme.of(context).colorScheme.error,
+            foregroundColor: Theme.of(context).colorScheme.onError,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
             ),
           ),
-          child: const Text('취소', style: TextStyle(color: Colors.white)),
+          child: const Text('취소'),
         ),
       );
     }
@@ -329,13 +346,13 @@ class _AudioHomePageState extends State<AudioHomePage> {
 
   List<Widget> _buildTimerButtonsList() {
     final timerDurations = [
-      {'label': '10초', 'duration': const Duration(seconds: 10)},
-      {'label': '1분', 'duration': const Duration(minutes: 1)},
-      {'label': '5분', 'duration': const Duration(minutes: 5)},
-      {'label': '10분', 'duration': const Duration(minutes: 10)},
-      {'label': '15분', 'duration': const Duration(minutes: 15)},
-      {'label': '30분', 'duration': const Duration(minutes: 30)},
-      {'label': '1시간', 'duration': const Duration(hours: 1)},
+      {'label': '10s', 'duration': const Duration(seconds: 10)},
+      {'label': '1m', 'duration': const Duration(minutes: 1)},
+      {'label': '5m', 'duration': const Duration(minutes: 5)},
+      {'label': '10m', 'duration': const Duration(minutes: 10)},
+      {'label': '15m', 'duration': const Duration(minutes: 15)},
+      {'label': '30m', 'duration': const Duration(minutes: 30)},
+      {'label': '1h', 'duration': const Duration(hours: 1)},
     ];
 
     return timerDurations.map((timer) {
@@ -357,13 +374,11 @@ class _AudioHomePageState extends State<AudioHomePage> {
         MaterialPageRoute(builder: (context) => const ExplainScreen()),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       ),
-      child: Text(
-        'How It Works',
-        style: TextStyle(color: Theme.of(context).colorScheme.primary),
-      ),
+      child: const Text('How It Works'),
     );
   }
 
@@ -374,9 +389,9 @@ class _AudioHomePageState extends State<AudioHomePage> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.06),
+            color: Colors.white.withAlpha(15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            border: Border.all(color: Colors.white.withAlpha(20)),
           ),
           child: child,
         ),

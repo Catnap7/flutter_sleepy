@@ -78,17 +78,55 @@ class AppRadii extends ThemeExtension<AppRadii> {
 
 // ===== Color Schemes (seed based) =====
 class AppColors {
-  static const Color seed =
-      Color(0xFF0FB9B1); // Teal-ish, change to your brand color
+  // Vibrant, modern aqua as the primary brand seed (Day mode)
+  static const Color seed = Color(0xFF00C2B8);
 
   static final ColorScheme light = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
+  ).copyWith(
+    secondary: const Color(0xFF7C4DFF), // Vibrant violet
+    tertiary: const Color(0xFFFFB300), // Warm amber
+    error: const Color(0xFFE53935),
   );
 
   static final ColorScheme dark = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.dark,
+  ).copyWith(
+    secondary: const Color(0xFFB388FF), // Softer violet for dark
+    tertiary: const Color(0xFFFFCA28), // Amber for dark
+    error: const Color(0xFFFF5370),
+    surface: const Color(0xFF0D1117),
+  );
+}
+
+// Sleep-optimized palette: muted, warm, low-stimulation
+class AppSleepColors {
+  static const Color seed = Color(0xFF5B4B8A); // muted soft purple
+
+  static final ColorScheme light = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: Brightness.light,
+  ).copyWith(
+    primary: const Color(0xFF6E5AA8), // softened primary
+    secondary: const Color(0xFF9B8EC1), // mauve accent
+    tertiary: const Color(0xFFBFAF9F), // warm gray accent
+    error: const Color(0xFFCF6679),
+    surface: const Color(0xFFF5F3F8),
+    surfaceTint: const Color(0xFF6E5AA8),
+  );
+
+  static final ColorScheme dark = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: Brightness.dark,
+  ).copyWith(
+    primary: const Color(0xFFB8A7E6),
+    secondary: const Color(0xFFD3C8F0),
+    tertiary: const Color(0xFFC9BEB3),
+    error: const Color(0xFFFF8A80),
+    surface: const Color(0xFF0E1016),
+    surfaceTint: const Color(0xFFB8A7E6),
   );
 }
 
@@ -159,7 +197,7 @@ class AppTheme {
       // Inputs
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: cs.surfaceContainerHighest.withOpacity(0.5),
+        fillColor: cs.surfaceTint.withAlpha(80),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
@@ -196,6 +234,14 @@ class AppTheme {
         }),
       ),
 
+      // Sliders
+      sliderTheme: base.sliderTheme.copyWith(
+        activeTrackColor: cs.primary,
+        inactiveTrackColor: cs.primary.withAlpha(50),
+        thumbColor: cs.primary,
+        overlayColor: cs.primary.withAlpha(40),
+      ),
+
       // Chips
       chipTheme: base.chipTheme.copyWith(
         shape: RoundedRectangleBorder(
@@ -219,15 +265,29 @@ class AppTheme {
 
   static ThemeData dark() {
     final cs = AppColors.dark;
-    final base = ThemeData(
-      useMaterial3: true,
-      colorScheme: cs,
-      brightness: Brightness.dark,
-    );
 
     return light().copyWith(
       colorScheme: cs,
       brightness: Brightness.dark,
+      scaffoldBackgroundColor: cs.surface,
+    );
+  }
+
+  // Sleep mode variants (muted, warm tones optimized for bedtime)
+  static ThemeData sleepLight() {
+    final cs = AppSleepColors.light;
+    final base = light();
+    return base.copyWith(
+      colorScheme: cs,
+      scaffoldBackgroundColor: cs.surface,
+    );
+  }
+
+  static ThemeData sleepDark() {
+    final cs = AppSleepColors.dark;
+    final base = dark();
+    return base.copyWith(
+      colorScheme: cs,
       scaffoldBackgroundColor: cs.surface,
     );
   }
@@ -239,6 +299,8 @@ extension SpacingX on BuildContext {
 
   AppRadii get radii => Theme.of(this).extension<AppRadii>()!;
 }
+
+
 
 // ===== Example usage widget =====
 class ThemedExample extends StatelessWidget {

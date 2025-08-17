@@ -57,6 +57,7 @@ dependencies:
   freezed: any
   json_serializable: ^6.9.0
   app_links: any
+  dynamic_color: ^1.8.1
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +85,7 @@ flutter:
   assets:
     - assets/audio/
     - assets/icon/
+    - assets/images/
 
   #   - images/a_dot_ham.jpeg
 
