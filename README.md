@@ -1,16 +1,39 @@
-# flutter_sleepy
+# Sleepy – Bedtime Sound App (Flutter)
 
-A new Flutter project.
+Sleepy plays calming sounds (Rain, Pink Noise, Fire) with a sleep timer that keeps playing in the background and stops at the set time.
 
-## Getting Started
+## Run locally
 
-This project is a starting point for a Flutter application.
+Prerequisites:
+- Flutter SDK (stable channel)
+- Android Studio/Xcode for device simulators and platform SDKs
 
-A few resources to get you started if this is your first Flutter project:
+Commands:
+1. flutter pub get
+2. flutter run
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Notes:
+- On first launch on Android, you may be prompted to allow ignoring battery optimizations for stable background playback.
+- Background service notification will show current state (Ready / Playing / remaining time).
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Tests
+
+This repo contains a minimal widget smoke test and a pure-Dart unit test.
+
+Run all tests:
+- flutter test
+
+Files:
+- test/widget_test.dart – verifies the home title renders
+- test/duration_formatter_test.dart – verifies DurationFormatter formatting
+
+## Troubleshooting
+
+- If Android build fails in non-Flutter-aware environments, build locally with Flutter tools:
+  - flutter clean && flutter pub get && flutter build apk
+- For iOS, open ios/Runner.xcworkspace in Xcode and run on a device/simulator.
+
+## About
+- Dark-first UI, Material 3, large tap targets, accessible labels.
+- Background playback via flutter_background_service.
+- Audio via just_audio.

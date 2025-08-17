@@ -43,7 +43,9 @@ class AudioService {
     });
 
     _setupAudioErrorHandling();
-  }  void _setupAudioErrorHandling() {
+  }
+
+  void _setupAudioErrorHandling() {
     _player.playbackEventStream.listen(
       (_) {},
       onError: (Object e, StackTrace stackTrace) {

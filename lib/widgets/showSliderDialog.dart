@@ -16,7 +16,7 @@ void showSliderDialog({
       backgroundColor: Colors.blueGrey[800],
       title: Text(
         title,
-        style: TextStyle(color: Colors.tealAccent),
+        style: TextStyle(color: Theme.of(context).colorScheme.primary),
       ),
       content: StreamBuilder<double>(
         stream: stream,
@@ -26,7 +26,7 @@ void showSliderDialog({
             children: [
               Text(
                 '${snapshot.data?.toStringAsFixed(1)}',
-                style: TextStyle(color: Colors.tealAccent),
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
               Slider(
                 divisions: divisions,

@@ -82,9 +82,24 @@ void onStart(ServiceInstance service) async {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  bool customNotificationActive = false;
+
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
       service.setAsForegroundService();
+    });
+
+    service.on('updateNotification').listen((event) async {
+      final String? title = (event?["title"])?.toString();
+      final String? content = (event?["content"])?.toString();
+      if (title != null && content != null) {
+        customNotificationActive = true;
+        await service.setForegroundNotificationInfo(title: title, content: content);
+      }
+    });
+
+    service.on('resetNotification').listen((event) async {
+      customNotificationActive = false;
     });
   }
 
@@ -95,25 +110,13 @@ void onStart(ServiceInstance service) async {
   Timer.periodic(const Duration(seconds: 1), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
-        flutterLocalNotificationsPlugin.show(
-          888,
-          'Sleepy Audio Service',
-          'Running at ${DateTime.now()}',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              NOTIFICATION_CHANNEL_ID,
-              NOTIFICATION_CHANNEL_TITLE,
-              icon: 'ic_bg_service_small',
-              ongoing: true,
-              importance: Importance.high,
-            ),
-          ),
-        );
-
-        service.setForegroundNotificationInfo(
-          title: "Sleepy Audio",
-          content: "Playing background audio at ${DateTime.now()}",
-        );
+        if (!customNotificationActive) {
+          // Keep a lightweight heartbeat without overriding custom content
+          await service.setForegroundNotificationInfo(
+            title: "Sleepy Audio",
+            content: "Ready in background • ${DateTime.now().toLocal().toIso8601String()}",
+          );
+        }
       }
     }
 

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_sleepy/constants/constants.dart';
 import 'package:flutter_sleepy/widgets/showSliderDialog.dart';
@@ -5,53 +6,76 @@ import 'package:just_audio/just_audio.dart';
 
 class AudioControls extends StatelessWidget {
   final AudioPlayer player;
+  final ValueChanged<bool>? onPlayPauseChanged;
 
-  const AudioControls(this.player, {super.key});
+  const AudioControls(this.player, {super.key, this.onPlayPauseChanged});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildVolumeControl(context),
-        const SizedBox(width: 40.0),
-        // 재생/일시정지 버튼
-        StreamBuilder<PlayerState>(
-          stream: player.playerStateStream,
-          builder: (context, snapshot) {
-            final playerState = snapshot.data;
-            final processingState = playerState?.processingState;
-            final playing = playerState?.playing;
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildVolumeControl(context),
+                const SizedBox(width: 24.0),
+                // 재생/일시정지 버튼
+                StreamBuilder<PlayerState>(
+                  stream: player.playerStateStream,
+                  builder: (context, snapshot) {
+                    final playerState = snapshot.data;
+                    final processingState = playerState?.processingState;
+                    final playing = playerState?.playing;
 
-            if (processingState == ProcessingState.loading ||
-                processingState == ProcessingState.buffering) {
-              return Container(
-                margin: const EdgeInsets.all(8.0),
-                width: 64.0,
-                height: 64.0,
-                child: const CircularProgressIndicator(),
-              );
-            }
+                    if (processingState == ProcessingState.loading ||
+                        processingState == ProcessingState.buffering) {
+                      return SizedBox(
+                        width: 64.0,
+                        height: 64.0,
+                        child: const CircularProgressIndicator(),
+                      );
+                    }
 
-            return IconButton(
-              icon: Icon(
-                playing ?? false ? Icons.pause_circle : Icons.play_circle,
-                color: Colors.tealAccent,
-              ),
-              iconSize: 64.0,
-              onPressed: () {
-                if (playing ?? false) {
-                  player.pause();
-                } else {
-                  player.play();
-                }
-              },
-            );
-          },
+                    final isPlaying = playing ?? false;
+                    return Semantics(
+                      button: true,
+                      label: isPlaying ? 'Pause playback' : 'Play sound',
+                      child: IconButton(
+                        icon: Icon(
+                          isPlaying ? Icons.pause_circle : Icons.play_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        iconSize: 64.0,
+                        onPressed: () {
+                          if (isPlaying) {
+                            player.pause();
+                            onPlayPauseChanged?.call(false);
+                          } else {
+                            player.play();
+                            onPlayPauseChanged?.call(true);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 24),
+                _buildSpeedControl(context),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(width: 40),
-        _buildSpeedControl(context),
-      ],
+      ),
     );
   }
 
@@ -70,9 +94,9 @@ class AudioControls extends StatelessWidget {
         return IconButton(
           icon: Text(
             "${speed}x",
-            style: const TextStyle(
+            style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.tealAccent
+                color: Theme.of(context).colorScheme.primary
             ),
           ),
           onPressed: () => _showSpeedDialog(context),
