@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_sleepy/screens/audio_home_page.dart';
+import 'package:flutter_sleepy/l10n/app_localizations.dart';
+import 'package:flutter_sleepy/features/home/presentation/home_screen.dart';
 import 'package:flutter_sleepy/screens/theme_settings_screen.dart';
 import 'package:flutter_sleepy/services/background_service_stub.dart'
     if (dart.library.io) 'package:flutter_sleepy/services/background_service.dart';
@@ -63,10 +64,12 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Sleepy Audio App',
+      onGenerateTitle: (ctx) => AppLocalizations.of(ctx)!.appTitle,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: widget.controller.themeMode,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: AudioHomePage(controller: widget.controller),
       builder: (context, child) {
         return _AppScaffold(controller: widget.controller, child: child);
