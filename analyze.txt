@@ -1,0 +1,113 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 85.0.0 (88.0.0 available)
+  analyzer 7.7.1 (8.1.1 available)
+  async 2.11.0 (2.13.0 available)
+  audio_session 0.1.25 (0.2.2 available)
+  boolean_selector 2.1.1 (2.1.2 available)
+  build 3.0.0 (3.0.2 available)
+  build_config 1.1.1 (1.2.0 available)
+  build_daemon 4.0.2 (4.0.4 available)
+  build_resolvers 3.0.0 (3.0.2 available)
+  build_runner 2.6.0 (2.7.0 available)
+  build_runner_core 9.2.0 (9.3.0 available)
+  characters 1.4.0 (1.4.1 available)
+  checked_yaml 2.0.3 (2.0.4 available)
+  dart_style 3.1.1 (3.1.2 available)
+  device_info_plus 11.3.0 (11.5.0 available)
+  device_info_plus_platform_interface 7.0.2 (7.0.3 available)
+  ffi 2.1.3 (2.1.4 available)
+  flutter_lints 5.0.0 (6.0.0 available)
+  http_parser 4.0.2 (4.1.2 available)
+  just_audio 0.9.46 (0.10.4 available)
+  lints 5.0.0 (6.0.0 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.16.0 (1.17.0 available)
+  path_provider_android 2.2.15 (2.2.17 available)
+  path_provider_foundation 2.4.1 (2.4.2 available)
+  petitparser 6.0.2 (7.0.1 available)
+  pubspec_parse 1.4.0 (1.5.0 available)
+  shared_preferences_android 2.4.7 (2.4.11 available)
+  shelf 1.4.1 (1.4.2 available)
+  shelf_web_socket 2.0.1 (3.0.0 available)
+  source_span 1.10.0 (1.10.1 available)
+  string_scanner 1.2.0 (1.4.1 available)
+  synchronized 3.3.0+3 (3.4.0 available)
+  term_glyph 1.2.1 (1.2.2 available)
+  test_api 0.7.6 (0.7.7 available)
+  url_launcher 6.3.1 (6.3.2 available)
+  url_launcher_android 6.3.14 (6.3.17 available)
+  url_launcher_ios 6.3.3 (6.3.4 available)
+  url_launcher_macos 3.2.2 (3.2.3 available)
+  url_launcher_web 2.3.3 (2.4.1 available)
+  vm_service 14.2.5 (15.0.2 available)
+  win32 5.10.1 (5.14.0 available)
+  win32_registry 1.1.5 (2.1.0 available)
+  xml 6.5.0 (6.6.1 available)
+Got dependencies!
+44 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Analyzing flutter_sleepy...                                     
+
+   info - The constant name 'NOTIFICATION_CHANNEL_ID' isn't a lowerCamelCase identifier - lib\constants\notification_constants.dart:2:14 - constant_identifier_names
+   info - The constant name 'NOTIFICATION_CHANNEL_TITLE' isn't a lowerCamelCase identifier - lib\constants\notification_constants.dart:3:14 - constant_identifier_names
+warning - Unused import: 'package:just_audio/just_audio.dart' - lib\screens\audio_home_page.dart:14:8 - unused_import
+   info - Local variables should be final - lib\screens\audio_home_page.dart:105:5 - prefer_final_locals
+warning - The declaration '_onTrackChanged' isn't referenced - lib\screens\audio_home_page.dart:124:16 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:101:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:102:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:110:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:205:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:206:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:207:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:289:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:289:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:298:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:343:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\explain_screen.dart:343:62 - deprecated_member_use
+warning - The value of the local variable 'theme' isn't used - lib\screens\explain_screen.dart:389:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\screens\explain_screen.dart:390:12 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\explain_screen.dart:392:14 - prefer_const_constructors
+   info - Closure should be a tearoff - lib\screens\theme_settings_screen.dart:78:40 - unnecessary_lambdas
+   info - Use 'const' with the constructor to improve performance - lib\services\audio_service.dart:22:29 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\services\audio_service.dart:52:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\audio_service.dart:65:7 - avoid_print
+   info - Local variables should be final - lib\services\background_service.dart:67:3 - prefer_final_locals
+   info - Local variables should be final - lib\services\background_service.dart:79:3 - prefer_final_locals
+warning - The value of the local variable 'flutterLocalNotificationsPlugin' isn't used - lib\services\background_service.dart:82:41 - unused_local_variable
+   info - Local variables should be final - lib\services\background_service.dart:147:3 - prefer_final_locals
+warning - The value of the local variable 'base' isn't used - lib\theme\app_theme.dart:191:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\theme\app_theme.dart:232:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\theme\app_theme.dart:234:36 - deprecated_member_use
+   info - The private field _themeMode could be 'final' - lib\theme\theme_controller.dart:17:13 - prefer_final_fields
+   info - Dangling library doc comment - lib\ui\low_mist.dart:1:1 - dangling_library_doc_comments
+   info - The private field _lastMs could be 'final' - lib\ui\low_mist.dart:98:7 - prefer_final_fields
+warning - The value of the field '_lastMs' isn't used - lib\ui\low_mist.dart:98:7 - unused_field
+   info - Local variables should be final - lib\ui\low_mist.dart:178:7 - prefer_final_locals
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\sound_selector.dart:46:13 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\sound_selector.dart:60:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:24:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:27:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:28:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:30:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:31:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:32:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:49:69 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:50:69 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\themed_action_button.dart:64:55 - deprecated_member_use
+warning - Unnecessary cast - lib\utils\soundscapes.dart:440:32 - unnecessary_cast
+warning - A value for optional parameter 'key' isn't ever given - lib\utils\soundscapes.dart:453:26 - unused_element_parameter
+warning - A value for optional parameter 'key' isn't ever given - lib\utils\soundscapes.dart:518:27 - unused_element_parameter
+warning - A value for optional parameter 'key' isn't ever given - lib\utils\soundscapes.dart:753:29 - unused_element_parameter
+warning - The declaration '+' isn't referenced - lib\utils\soundscapes.dart:811:19 - unused_element
+warning - The declaration '-' isn't referenced - lib\utils\soundscapes.dart:813:19 - unused_element
+warning - The declaration '*' isn't referenced - lib\utils\soundscapes.dart:815:19 - unused_element
+warning - A value for optional parameter 'key' isn't ever given - lib\utils\soundscapes.dart:820:28 - unused_element_parameter
+   info - Use a function declaration rather than a variable assignment to bind a function to a name - lib\utils\soundscapes.dart:834:11 - prefer_function_declarations_over_variables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\utils\soundscapes.dart:935:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\utils\soundscapes.dart:941:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\utils\soundscapes.dart:947:42 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\widgets\audio_controls.dart:42:30 - prefer_const_constructors
+   info - The file name 'showSliderDialog.dart' isn't a lower_case_with_underscores identifier - lib\widgets\showSliderDialog.dart:1:1 - file_names
+
+60 issues found. (ran in 5.3s)
