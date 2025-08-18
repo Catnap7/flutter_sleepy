@@ -135,8 +135,10 @@ class _AudioHomePageState extends State<AudioHomePage> {
       index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('waves'));
     } else if (k.replaceAll(' ', '') == 'campfire') {
       index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('camp fire'));
-    } else {
+    } else if (k.contains('rainy')) {
       index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('rainy'));
+    } else {
+      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('pink noise'));
     }
     if (index < 0) index = 0;
     if (index != _selectedIndex) {
@@ -233,41 +235,6 @@ class _AudioHomePageState extends State<AudioHomePage> {
       title: const Text('Sleepy Audio'),
     );
   }
-
-/*  Widget _buildTrackInfo() {
-    return StreamBuilder<SequenceState?>(
-      stream: _audioService.player.sequenceStateStream,
-      builder: (context, _) {
-        return Text(
-          'Now Playing: ${TracksData.tracks[_selectedIndex].title}',
-          style: Theme.of(context).textTheme.titleLarge,
-        );
-      },
-    );
-  }*/
-
- /* Widget _buildTrackSelector() {
-    return DropdownButton<int>(
-      value: _selectedIndex,
-      dropdownColor: Theme.of(context).colorScheme.surface,
-      style: TextStyle(color: Theme.of(context).colorScheme.primary),
-      underline: Container(
-        height: 2,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      items: _buildTrackItems(),
-      onChanged: _onTrackChanged,
-    );
-  }*/
-
-  /*List<DropdownMenuItem<int>> _buildTrackItems() {
-    return TracksData.tracks.asMap().entries.map((entry) {
-      return DropdownMenuItem<int>(
-        value: entry.key,
-        child: Text(entry.value.title),
-      );
-    }).toList();
-  }*/
 
   Widget _buildTimerSection() {
     return Column(
@@ -393,7 +360,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
       icon: Icons.auto_awesome_rounded,
       onPressed: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const ExplainScreen()),
+        MaterialPageRoute(builder: (context) => const ExplainScreenV2()),
       ),
     );
   }

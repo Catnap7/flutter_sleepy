@@ -12,7 +12,8 @@ Soundscape mapSoundKeyToScape(String key) {
   final k = key.trim().toLowerCase();
   if (k.contains('wave')) return Soundscape.waves;
   if (k.replaceAll(' ', '') == 'campfire') return Soundscape.campfire;
-  return Soundscape.rainy; // default
+  if (k.contains('rainy')) return Soundscape.rainy;
+  return Soundscape.pinknoise; // default
 }
 
 /// Lifecycle gate to pause animations when app is not active.
@@ -52,7 +53,7 @@ class _LifecycleGateState extends State<LifecycleGate> with WidgetsBindingObserv
 class SoundReactiveBackground extends StatelessWidget {
   const SoundReactiveBackground({
     super.key,
-    required this.currentSoundKey, // e.g. "rainy" | "waves" | "camp fire"
+    required this.currentSoundKey,
     this.intensity = 1.0,          // 0.5 ~ 1.5 recommended
     required this.child,
   });

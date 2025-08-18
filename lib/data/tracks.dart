@@ -9,6 +9,11 @@ class TracksData {
     ),
     Track(
         id: 'pink_noise',
+        title: "Pink Noise",
+        assetPath: "assets/audio/pink_noise.mp3"
+    ),
+    Track(
+        id: 'wave_noise',
         title: "Waves",
         assetPath: "assets/audio/wave.mp3"
     ),

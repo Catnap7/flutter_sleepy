@@ -18,6 +18,7 @@ class SoundSelectorCard extends StatelessWidget {
       DropdownMenuItem(value: 'rainy', child: Text('Rainy')),
       DropdownMenuItem(value: 'waves', child: Text('Waves')),
       DropdownMenuItem(value: 'camp fire', child: Text('Camp Fire')),
+      DropdownMenuItem(value: 'pink noise', child: Text('Pink Noise')),
     ];
 
     return Padding(

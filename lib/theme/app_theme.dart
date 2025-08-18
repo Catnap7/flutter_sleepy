@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 
-enum SoundAccent { rainy, waves, campfire }
+enum SoundAccent { rainy, waves, campfire, pinknoise }
 
 // ===== Design Tokens (ThemeExtensions) =====
 class AppSpacing extends ThemeExtension<AppSpacing> {
@@ -300,7 +300,8 @@ class AppSoundAccent {
     final t = title.trim().toLowerCase();
     if (t.contains('wave')) return SoundAccent.waves;
     if (t.replaceAll(' ', '') == 'campfire') return SoundAccent.campfire;
-    return SoundAccent.rainy;
+    if (t.contains('rainy')) return SoundAccent.rainy;
+    return SoundAccent.pinknoise;
   }
 
   /// Base (seed) colors for each sound. Tuned to be calm at night.
@@ -312,6 +313,8 @@ class AppSoundAccent {
         return const Color(0xFF00C2B8); // aqua/teal
       case SoundAccent.campfire:
         return const Color(0xFFFF8A3D); // warm fire orange
+      case SoundAccent.pinknoise:
+        return const Color(0xFFFFB6D5); // soft pink
     }
   }
 }
