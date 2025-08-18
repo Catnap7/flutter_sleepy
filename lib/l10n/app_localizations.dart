@@ -229,6 +229,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} sound} other{{count} sounds}}'**
   String soundsCount(int count);
+
+  /// No description provided for @effects_sleepQuality_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink noise can encourage deeper sleep and improve overall sleep quality. You may sleep longer and wake feeling more refreshed.'**
+  String get effects_sleepQuality_desc;
+
+  /// No description provided for @effects_focusMemory_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality sleep optimizes brain function. Pink noise is associated with improved memory and learning, helping better focus when awake.'**
+  String get effects_focusMemory_desc;
+
+  /// No description provided for @effects_tinnitus_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink noise can act as gentle background sound that makes intrusive ringing less noticeable.'**
+  String get effects_tinnitus_desc;
+
+  /// No description provided for @effects_stress_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft, steady sound helps calm the mind. Try pink noise to relax body and mind.'**
+  String get effects_stress_desc;
+
+  /// No description provided for @how_bullet_1.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink noise features a 1/f power spectrum: stronger low frequencies and gradually decreasing energy toward higher frequencies.'**
+  String get how_bullet_1;
+
+  /// No description provided for @how_bullet_2.
+  ///
+  /// In en, this message translates to:
+  /// **'This spectral profile helps the brain perceive predictable patterns, making sudden external noises feel less disruptive.'**
+  String get how_bullet_2;
+
+  /// No description provided for @how_bullet_3.
+  ///
+  /// In en, this message translates to:
+  /// **'As a result, it can reduce arousal frequency and help stabilize deeper sleep stages.'**
+  String get how_bullet_3;
+
+  /// No description provided for @tips_bullet_1.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with low volume and increase slowly. Aim for softer than conversation, like a gentle breath.'**
+  String get tips_bullet_1;
+
+  /// No description provided for @tips_bullet_2.
+  ///
+  /// In en, this message translates to:
+  /// **'For sleep mode, try a 30–60 minute timer by default; play all night if needed.'**
+  String get tips_bullet_2;
+
+  /// No description provided for @tips_bullet_3.
+  ///
+  /// In en, this message translates to:
+  /// **'Speakers or sleep speakers are often more comfortable than earphones.'**
+  String get tips_bullet_3;
+
+  /// No description provided for @faq_q1.
+  ///
+  /// In en, this message translates to:
+  /// **'How is it different from white noise?'**
+  String get faq_q1;
+
+  /// No description provided for @faq_a1.
+  ///
+  /// In en, this message translates to:
+  /// **'White noise distributes equal power across frequencies, while pink noise follows 1/f with stronger lows. Pink noise often sounds less sharp and more natural.'**
+  String get faq_a1;
+
+  /// No description provided for @faq_q2.
+  ///
+  /// In en, this message translates to:
+  /// **'How loud should I set it?'**
+  String get faq_q2;
+
+  /// No description provided for @faq_a2.
+  ///
+  /// In en, this message translates to:
+  /// **'Too loud can be counterproductive. Keep it clearly below conversation level—present but never distracting.'**
+  String get faq_a2;
+
+  /// No description provided for @faq_q3.
+  ///
+  /// In en, this message translates to:
+  /// **'Earphones vs speakers?'**
+  String get faq_q3;
+
+  /// No description provided for @faq_a3.
+  ///
+  /// In en, this message translates to:
+  /// **'Most people find speakers more comfortable, but it depends on your noise environment and personal preference.'**
+  String get faq_a3;
 }
 
 class _AppLocalizationsDelegate

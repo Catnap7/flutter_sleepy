@@ -546,6 +546,69 @@ ACCEPTANCE:
 - Spelling/formatting clean.
 - Open PR: 'docs/i18n-readme'."
 
+## TASK: I18N HARDENING SWEEP (no in-app toggle; system locale only)
+
+GOAL
+- Ensure 100% of user-facing strings are localized via ARB (en/ko).
+- If device locale = en, **no Korean text** appears anywhere, and vice versa.
+
+SCOPE
+- All Dart under `lib/**` except `lib/l10n/**`, tests, and painter files **that do not render text**.
+- Screens likely affected: Explain/HowItWorks (EffectCard), headers, buttons, snackbars, dialogs.
+- CustomPainters that currently draw text (e.g., Pink header painter): **must not hardcode text**.
+
+RULES (hard)
+1) No hardcoded UI strings. Every user-facing string must use `AppLocalizations` keys.
+2) Do not change behavior/UX. Visual layout stays the same.
+3) For CustomPainter: pass localized strings in via constructor **or** move text out to normal widgets layered on top. Prefer moving text to widgets.
+4) Keep ARB keys in lower_snake_case with screen prefix when possible (e.g., `how_title`, `how_sleep_quality_title`).
+5) Update en/ko ARBs consistently; en is the default fallback.
+
+IMPLEMENTATION STEPS
+1) SCAN
+    - Add `tool/l10n_scan.dart` to find suspicious hardcoded strings:
+        - match Korean: `[\\uac00-\\ud7af]`
+        - match likely UI english phrases (basic heuristic): `^(How|Play|Back|Timer|Fade|Wave|Rain|Campfire|Forest|Sleep|Noise|Settings)\\b`
+    - Print file path + line number; ignore lines with `// l10n:ignore` or logs (`debugPrint/print/logger`).
+
+2) FIX
+    - Replace all hits with `context.l10n.*` calls (use `lib/l10n/l10n_ext.dart`).
+    - If a key is missing, add to `lib/l10n/app_en.arb` & `lib/l10n/app_ko.arb`.
+    - **Explain/EffectCard**: titles/descriptions를 전부 l10n 키로 치환.
+    - **CustomPainter text** (e.g., header “How It Works”):
+        - Option A (preferred): remove TextPainter text; render texts as normal widgets in a Stack above the painter.
+        - Option B: add `title`/`subtitle` parameters to painter and pass `context.l10n.*` from the screen.
+
+3) KEYS (add if missing; sample mapping)
+    - `how_title`: EN "How It Works", KO "사용법 안내"
+    - `how_subtitle`: EN "How it works — predictable 1/f sound helps reduce awakenings.", KO "How it works — 예측 가능한 1/f 소리로 외부 자극에 덜 깨어나도록 도와줍니다."
+    - `how_sleep_quality_title`: EN "Better sleep quality", KO "수면의 질 향상"
+    - `how_sleep_quality_desc`: EN "Pink noise can promote deeper sleep and improve overall quality…", KO "핑크 노이즈는 깊은 수면을 유도하여 전반적인 수면의 질을…"
+    - `how_focus_memory_title`: EN "Improved focus & memory", KO "집중력 및 기억력 개선"
+    - `how_focus_memory_desc`: EN "Quality sleep supports brain function…", KO "양질의 수면은 뇌의 기능을 최적화하는 데…"
+    - `how_tinnitus_title`: EN "Tinnitus relief", KO "이명 증상 완화"
+    - `how_tinnitus_desc`: EN "Acts as a gentle masker for ringing…", KO "핑크 노이즈는 배경 소음으로 작용해…"
+    - `how_stress_title`: EN "Stress reduction", KO "스트레스 감소"
+    - `how_stress_desc`: EN "Soft, steady sound can calm the mind…", KO "부드럽고 일정한 소리는…"
+    - `back`: EN "Back", KO "돌아가기"
+    - 필요 시 버튼/알림/시트 라벨도 동일 패턴으로 추가.
+
+4) WIDGET TESTS
+    - Add `test/i18n_locale_switch_test.dart`:
+        - Pump MaterialApp with `Locale('en')` then assert Korean titles **not found** and English keys are found.
+        - Repeat for `Locale('ko')`.
+    - (Optional) Golden for HowItWorks in EN/KO.
+
+5) CI
+    - Add a step to run `dart run tool/l10n_scan.dart --fail-on-found` and `flutter test`.
+    - PR must show zero scan hits and green tests.
+
+ACCEPTANCE
+- System locale EN: no Korean strings in UI screenshots (HowItWorks cards included).
+- `flutter analyze` & `flutter test` pass.
+- CI scan reports 0 findings.
+
+
 ## META: i18n rollout (no in-app toggle)
 Run S1–S7 sequentially. No new features. Must pass `flutter analyze` & `flutter test`.
 Prefer 3 PRs: (S1–S2), (S3–S5), (S6–S7). Stop on failures and report.
