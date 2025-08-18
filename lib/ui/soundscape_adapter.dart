@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/soundscapes.dart';
+import 'package:flutter_sleepy/utils/soundscapes.dart';
 
 /// Global route observer used to detect when a page becomes hidden/visible.
 class SoundscapeRouteObserver {

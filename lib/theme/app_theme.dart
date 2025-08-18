@@ -3,153 +3,13 @@
 // - Opinionated defaults for buttons, inputs, cards, app bar, nav bar
 
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/core/theme/color_schemes.dart';
+import 'package:flutter_sleepy/core/theme/text_theme.dart';
+import 'package:flutter_sleepy/core/theme/spacing.dart';
 
 enum SoundAccent { rainy, waves, campfire, pinknoise }
 
-// ===== Design Tokens (ThemeExtensions) =====
-class AppSpacing extends ThemeExtension<AppSpacing> {
-  final double xs; // 4
-  final double sm; // 8
-  final double md; // 12
-  final double lg; // 16
-  final double xl; // 24
-  final double xxl; // 32
-
-  const AppSpacing({
-    this.xs = 4,
-    this.sm = 8,
-    this.md = 12,
-    this.lg = 16,
-    this.xl = 24,
-    this.xxl = 32,
-  });
-
-  @override
-  AppSpacing copyWith(
-          {double? xs,
-          double? sm,
-          double? md,
-          double? lg,
-          double? xl,
-          double? xxl}) =>
-      AppSpacing(
-          xs: xs ?? this.xs,
-          sm: sm ?? this.sm,
-          md: md ?? this.md,
-          lg: lg ?? this.lg,
-          xl: xl ?? this.xl,
-          xxl: xxl ?? this.xxl);
-
-  @override
-  AppSpacing lerp(ThemeExtension<AppSpacing>? other, double t) {
-    if (other is! AppSpacing) return this;
-    return AppSpacing(
-      xs: lerpDouble(xs, other.xs, t),
-      sm: lerpDouble(sm, other.sm, t),
-      md: lerpDouble(md, other.md, t),
-      lg: lerpDouble(lg, other.lg, t),
-      xl: lerpDouble(xl, other.xl, t),
-      xxl: lerpDouble(xxl, other.xxl, t),
-    );
-  }
-
-  static double lerpDouble(double a, double b, double t) => a + (b - a) * t;
-}
-
-class AppRadii extends ThemeExtension<AppRadii> {
-  final double sm; // 8
-  final double md; // 16
-  final double lg; // 24
-
-  const AppRadii({this.sm = 8, this.md = 16, this.lg = 24});
-
-  @override
-  AppRadii copyWith({double? sm, double? md, double? lg}) =>
-      AppRadii(sm: sm ?? this.sm, md: md ?? this.md, lg: lg ?? this.lg);
-
-  @override
-  AppRadii lerp(ThemeExtension<AppRadii>? other, double t) {
-    if (other is! AppRadii) return this;
-    return AppRadii(
-      sm: AppSpacing.lerpDouble(sm, other.sm, t),
-      md: AppSpacing.lerpDouble(md, other.md, t),
-      lg: AppSpacing.lerpDouble(lg, other.lg, t),
-    );
-  }
-}
-
-// ===== Color Schemes (seed based) =====
-class AppColors {
-  // Vibrant, modern aqua as the primary brand seed (Day mode)
-  static const Color seed = Color(0xFFC20000);
-
-  static final ColorScheme light = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Brightness.light,
-  ).copyWith(
-    secondary: const Color(0xFF7C4DFF), // Vibrant violet
-    tertiary: const Color(0xFFFFB300), // Warm amber
-    error: const Color(0xFFE53935),
-  );
-
-  static final ColorScheme dark = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Brightness.dark,
-  ).copyWith(
-    secondary: const Color(0xFFB388FF), // Softer violet for dark
-    tertiary: const Color(0xFFFFCA28), // Amber for dark
-    error: const Color(0xFFFF5370),
-    surface: const Color(0xFF0D1117),
-  );
-}
-
-// Sleep-optimized palette: muted, warm, low-stimulation
-class AppSleepColors {
-  static const Color seed = Color(0xFF424B77); // muted soft purple
-
-  static final ColorScheme light = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Brightness.light,
-  ).copyWith(
-    primary: const Color(0xFF1A080D),
-    // softened primary
-    secondary: const Color(0xFF9B8EC1),
-    // mauve accent
-    tertiary: const Color(0xFFBFAF9F),
-    // warm gray accent
-    error: const Color(0xFFCF6679),
-    surface: const Color(0xFFF5F3F8),
-    surfaceTint: const Color(0xFF6E5AA8),
-  );
-
-  static final ColorScheme dark = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Brightness.dark,
-  ).copyWith(
-    primary: const Color(0xFFB8A7E6),
-    secondary: const Color(0xFFD3C8F0),
-    tertiary: const Color(0xFFC9BEB3),
-    error: const Color(0xFFFF8A80),
-    surface: const Color(0xFF0E1016),
-    surfaceTint: const Color(0xFFB8A7E6),
-  );
-}
-
-// ===== Typography helper (uses default Material if GoogleFonts not installed) =====
-class AppTypography {
-  static TextTheme textTheme(TextTheme base) {
-    // If you want Pretendard or NotoSansKR, add google_fonts and replace below.
-    // final t = GoogleFonts.pretendardTextTheme(base);
-    final t = base;
-    return t.copyWith(
-      headlineLarge: base.headlineLarge?.copyWith(fontWeight: FontWeight.w700),
-      titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-      bodyLarge: base.bodyLarge?.copyWith(height: 1.3),
-      bodyMedium: base.bodyMedium?.copyWith(height: 1.3),
-      bodySmall: base.bodySmall?.copyWith(height: 1.3),
-    );
-  }
-}
+// Design tokens and schemes are now provided via core/theme/*
 
 class AppTheme {
   // New: build everything using an arbitrary ColorScheme
@@ -394,9 +254,15 @@ class AppThemeAccentAPI {
 
 // Convenience re-export on your existing AppTheme class (optional):
 extension AppThemeX on AppTheme {
-  static ThemeData withSoundAccent(ThemeData base, SoundAccent accent,
-      {bool recolorSecondary = false}) {
-    return AppThemeAccentAPI.withSoundAccent(base, accent,
-        recolorSecondary: recolorSecondary);
+  static ThemeData withSoundAccent(
+    ThemeData base,
+    SoundAccent accent, {
+    bool recolorSecondary = false,
+  }) {
+    return AppThemeAccentAPI.withSoundAccent(
+      base,
+      accent,
+      recolorSecondary: recolorSecondary,
+    );
   }
 }
