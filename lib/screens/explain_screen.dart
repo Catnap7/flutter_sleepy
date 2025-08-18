@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/l10n/l10n_ext.dart';
 import 'package:flutter/scheduler.dart';
 
 /// Revamped "How it works" page for Pink Noise (V2 → fixes)
@@ -34,7 +35,7 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text('핑크 노이즈의 수면 효과'),
+            title: Text(context.l10n.howItWorks),
             flexibleSpace: const FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: _HeaderWavesTicker(),
@@ -71,9 +72,9 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               SizedBox(height: 16),
             ]),
           ),
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: _SectionCard(
-              title: '작동 원리 (How it works)',
+              title: context.l10n.section_how,
               children: [
                 _Bullet('핑크 노이즈는 주파수 f에 대해 1/f 파워 스펙트럼을 가지며, 저주파 성분이 더 크고 고주파로 갈수록 에너지가 서서히 줄어듭니다.'),
                 _Bullet('이 스펙트럼은 뇌가 예측 가능한 패턴을 인지하도록 도와, 외부의 급격한 소음 변화를 상대적으로 덜 민감하게 만듭니다.'),
@@ -81,9 +82,9 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               ],
             ),
           ),
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: _SectionCard(
-              title: '사용 팁',
+              title: context.l10n.section_tips,
               children: [
                 _Bullet('볼륨은 낮게 시작해 천천히 올리세요. 대화 소리보다 작게, 숨소리 같은 느낌이 좋습니다.'),
                 _Bullet('수면 모드에서는 30~60분 타이머를 기본값으로 쓰고, 필요 시 전체 밤새도록 재생해 보세요.'),
@@ -120,7 +121,7 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               child: OutlinedButton.icon(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('돌아가기'),
+                label: Text(context.l10n.back),
               ),
             ),
             const SizedBox(width: 12),
@@ -171,9 +172,11 @@ class _HeaderWavesTickerState extends State<_HeaderWavesTicker>
 
   @override
   Widget build(BuildContext context) {
+    final title = context.l10n.howItWorks;
+    final subtitle = context.l10n.howItWorksSubtitle;
     return ClipRect(
       child: CustomPaint(
-        painter: _PinkWavePainter(phaseSeconds: _phase),
+        painter: _PinkWavePainter(phaseSeconds: _phase, title: title, subtitle: subtitle),
         child: const SizedBox.expand(),
       ),
     );
@@ -181,9 +184,11 @@ class _HeaderWavesTickerState extends State<_HeaderWavesTicker>
 }
 
 class _PinkWavePainter extends CustomPainter {
-  _PinkWavePainter({required this.phaseSeconds});
+  _PinkWavePainter({required this.phaseSeconds, required this.title, required this.subtitle});
 
   final double phaseSeconds; // continuous time in seconds
+  final String title;
+  final String subtitle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -224,18 +229,18 @@ class _PinkWavePainter extends CustomPainter {
 
     // 3) Foreground title text (optional)
     final tp = TextPainter(
-      text: const TextSpan(
-        text: '핑크 노이즈의 수면 효과',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black),
+      text: TextSpan(
+        text: title,
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black),
       ),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: size.width - 40);
     tp.paint(canvas, const Offset(20, 140));
 
     final sub = TextPainter(
-      text: const TextSpan(
-        text: 'How it works — 예측 가능한 1/f 소리로 외부 자극에 덜 깨어나도록 도와줍니다.',
-        style: TextStyle(fontSize: 13, height: 1.25, color: Colors.black87),
+      text: TextSpan(
+        text: subtitle,
+        style: const TextStyle(fontSize: 13, height: 1.25, color: Colors.black87),
       ),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: size.width - 40);

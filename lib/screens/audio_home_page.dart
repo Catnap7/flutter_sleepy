@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/l10n/l10n_ext.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_sleepy/data/tracks.dart';
 import 'package:flutter_sleepy/screens/explain_screen.dart';
@@ -356,7 +357,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
 
   Widget _buildHowItWorksButton() {
     return ThemedActionButton(
-      label: 'How It Works',
+      label: context.l10n.howItWorks,
       icon: Icons.auto_awesome_rounded,
       onPressed: () => Navigator.push(
         context,

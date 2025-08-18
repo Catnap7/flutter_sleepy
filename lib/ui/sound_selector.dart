@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/l10n/l10n_ext.dart';
 
 class SoundSelectorCard extends StatelessWidget {
   const SoundSelectorCard({
@@ -14,11 +15,11 @@ class SoundSelectorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    const items = <DropdownMenuItem<String>>[
-      DropdownMenuItem(value: 'rainy', child: Text('Rainy')),
-      DropdownMenuItem(value: 'waves', child: Text('Waves')),
-      DropdownMenuItem(value: 'camp fire', child: Text('Camp Fire')),
-      DropdownMenuItem(value: 'pink noise', child: Text('Pink Noise')),
+    final items = <DropdownMenuItem<String>>[
+      DropdownMenuItem(value: 'rainy', child: Text(context.l10n.sound_rain)),
+      DropdownMenuItem(value: 'waves', child: Text(context.l10n.sound_waves)),
+      DropdownMenuItem(value: 'camp fire', child: Text(context.l10n.sound_campfire)),
+      DropdownMenuItem(value: 'pink noise', child: Text(context.l10n.sound_pink)),
     ];
 
     return Padding(
