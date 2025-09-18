@@ -16,6 +16,13 @@ import 'package:flutter_sleepy/ui/soundscape_adapter.dart';
 import 'package:flutter_sleepy/theme/theme_controller.dart';
 import 'package:flutter_sleepy/ui/sound_selector.dart';
 
+class _TimerPreset {
+  const _TimerPreset(this.label, this.duration);
+
+  final String label;
+  final Duration duration;
+}
+
 /// The main home page for the Sleepy Audio app.  It exposes controls
 /// for selecting the audio track, adjusting playback and timer
 /// settings, and navigating to an information screen.  The design
@@ -33,6 +40,18 @@ class _AudioHomePageState extends State<AudioHomePage> {
   int _selectedIndex = 0;
   Duration _remainingTime = Duration.zero;
 
+  static const List<_TimerPreset> _timerPresets = [
+    _TimerPreset('10s', Duration(seconds: 10)),
+    _TimerPreset('1m', Duration(minutes: 1)),
+    _TimerPreset('5m', Duration(minutes: 5)),
+    _TimerPreset('10m', Duration(minutes: 10)),
+    _TimerPreset('15m', Duration(minutes: 15)),
+    _TimerPreset('30m', Duration(minutes: 30)),
+    _TimerPreset('45m', Duration(minutes: 45)),
+    _TimerPreset('1h', Duration(hours: 1)),
+    _TimerPreset('2h', Duration(hours: 2)),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -41,20 +60,28 @@ class _AudioHomePageState extends State<AudioHomePage> {
 
   Future<void> _initializeServices() async {
     _audioService = AudioService();
+    await _runServiceStep(
+      () => BatteryOptimizationHandler.ignoreBatteryOptimization(),
+      'Battery optimization request',
+    );
+    await _runServiceStep(
+      _initializeAudio,
+      'Audio initialize',
+    );
+    await _runServiceStep(
+      _startBackgroundService,
+      'Background service start',
+    );
+  }
+
+  Future<void> _runServiceStep(
+    Future<void> Function() action,
+    String debugLabel,
+  ) async {
     try {
-      await BatteryOptimizationHandler.ignoreBatteryOptimization();
-    } catch (e) {
-      debugPrint('Battery optimization request skipped: $e');
-    }
-    try {
-      await _initializeAudio();
-    } catch (e) {
-      debugPrint('Audio initialize skipped: $e');
-    }
-    try {
-      await _startBackgroundService();
-    } catch (e) {
-      debugPrint('Background service start skipped: $e');
+      await action();
+    } catch (error) {
+      debugPrint('$debugLabel skipped: $error');
     }
   }
 
@@ -87,6 +114,18 @@ class _AudioHomePageState extends State<AudioHomePage> {
     } catch (e) {
       debugPrint('Set track failed: $e');
     }
+  }
+
+  Future<void> _selectTrack(int index) async {
+    if (index < 0 || index >= TracksData.tracks.length) {
+      return;
+    }
+    if (index == _selectedIndex) {
+      return;
+    }
+
+    setState(() => _selectedIndex = index);
+    await _setTrack(index);
   }
 
   Future<void> _startBackgroundService() async {
@@ -122,29 +161,36 @@ class _AudioHomePageState extends State<AudioHomePage> {
   }
 
   Future<void> _onTrackChanged(int? index) async {
-    if (index != null && index != _selectedIndex) {
-      setState(() => _selectedIndex = index);
-      await _setTrack(index);
+    if (index != null) {
+      await _selectTrack(index);
     }
   }
 
   Future<void> _onSoundKeyChanged(String key) async {
-    final k = key.trim().toLowerCase();
-    int index;
-    if (k.contains('wave')) {
-      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('waves'));
-    } else if (k.replaceAll(' ', '') == 'campfire') {
-      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('camp fire'));
-    } else if (k.contains('rainy')) {
-      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('rainy'));
-    } else {
-      index = TracksData.tracks.indexWhere((t) => t.title.toLowerCase().contains('pink noise'));
+    final index = _resolveTrackIndex(key);
+    await _selectTrack(index);
+  }
+
+  int _resolveTrackIndex(String key) {
+    final normalizedKey = key.trim().toLowerCase();
+
+    if (normalizedKey.contains('wave')) {
+      return _indexByTitleFragment('waves');
     }
-    if (index < 0) index = 0;
-    if (index != _selectedIndex) {
-      setState(() => _selectedIndex = index);
-      await _setTrack(index);
+    if (normalizedKey.replaceAll(' ', '') == 'campfire') {
+      return _indexByTitleFragment('camp fire');
     }
+    if (normalizedKey.contains('rain')) {
+      return _indexByTitleFragment('rain');
+    }
+    return _indexByTitleFragment('pink noise');
+  }
+
+  int _indexByTitleFragment(String fragment) {
+    final index = TracksData.tracks.indexWhere(
+      (track) => track.title.toLowerCase().contains(fragment),
+    );
+    return index >= 0 ? index : 0;
   }
 
   @override
@@ -286,8 +332,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
                 : 30,
           );
           if (customDuration != null) {
-            _audioService.startTimer(customDuration);
-            _sendNowPlayingUpdate();
+            _startTimer(customDuration);
           }
         },
         style: ElevatedButton.styleFrom(
@@ -304,10 +349,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
     if (_remainingTime > Duration.zero) {
       buttons.add(
         ElevatedButton(
-          onPressed: () {
-            _audioService.cancelTimer();
-            _sendNowPlayingUpdate();
-          },
+          onPressed: _cancelTimer,
           style: ElevatedButton.styleFrom(
             padding:
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -330,28 +372,25 @@ class _AudioHomePageState extends State<AudioHomePage> {
   }
 
   List<Widget> _buildTimerButtonsList() {
-    final timerDurations = [
-      {'label': '10s', 'duration': const Duration(seconds: 10)},
-      {'label': '1m', 'duration': const Duration(minutes: 1)},
-      {'label': '5m', 'duration': const Duration(minutes: 5)},
-      {'label': '10m', 'duration': const Duration(minutes: 10)},
-      {'label': '15m', 'duration': const Duration(minutes: 15)},
-      {'label': '30m', 'duration': const Duration(minutes: 30)},
-      {'label': '45m', 'duration': const Duration(minutes: 45)},
-      {'label': '1h', 'duration': const Duration(hours: 1)},
-      {'label': '2h', 'duration': const Duration(hours: 2)},
-    ];
+    return _timerPresets
+        .map(
+          (preset) => TimerButton(
+            label: preset.label,
+            duration: preset.duration,
+            onPressed: () => _startTimer(preset.duration),
+          ),
+        )
+        .toList();
+  }
 
-    return timerDurations.map((timer) {
-      return TimerButton(
-        label: timer['label'] as String,
-        duration: timer['duration'] as Duration,
-        onPressed: () {
-          _audioService.startTimer(timer['duration'] as Duration);
-          _sendNowPlayingUpdate();
-        },
-      );
-    }).toList();
+  void _startTimer(Duration duration) {
+    _audioService.startTimer(duration);
+    _sendNowPlayingUpdate();
+  }
+
+  void _cancelTimer() {
+    _audioService.cancelTimer();
+    _sendNowPlayingUpdate();
   }
 
   Widget _buildHowItWorksButton() {
