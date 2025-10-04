@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sleepy/data/tracks.dart';
+import 'package:flutter_sleepy/models/track.dart';
 
 class SoundSelectorCard extends StatelessWidget {
   const SoundSelectorCard({
@@ -10,16 +12,21 @@ class SoundSelectorCard extends StatelessWidget {
   final String value;
   final void Function(String) onChanged;
 
+  // Helper to map track titles to icons
+  IconData _getIconForTrack(String title) {
+    final lowerTitle = title.toLowerCase();
+    if (lowerTitle.contains('rain')) return Icons.water_drop_outlined;
+    if (lowerTitle.contains('waves')) return Icons.waves_outlined;
+    if (lowerTitle.contains('fire')) return Icons.fireplace_outlined;
+    if (lowerTitle.contains('pink')) return Icons.graphic_eq_outlined;
+    if (lowerTitle.contains('thunder')) return Icons.thunderstorm_outlined;
+    if (lowerTitle.contains('white')) return Icons.noise_aware_outlined;
+    return Icons.music_note_outlined; // Default icon
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
-    const items = <DropdownMenuItem<String>>[
-      DropdownMenuItem(value: 'rainy', child: Text('Rainy')),
-      DropdownMenuItem(value: 'waves', child: Text('Waves')),
-      DropdownMenuItem(value: 'camp fire', child: Text('Camp Fire')),
-      DropdownMenuItem(value: 'pink noise', child: Text('Pink Noise')),
-    ];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -34,45 +41,84 @@ class SoundSelectorCard extends StatelessWidget {
               Text(
                 'Choose a sound',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
 
-          DropdownButtonFormField<String>(
-            value: value,
-            isExpanded: true,
-            items: items,
-            onChanged: (v) {
-              if (v != null) onChanged(v);
-            },
-            dropdownColor: cs.surface,
-            iconEnabledColor: cs.primary,
-            iconDisabledColor: cs.outline,
-            decoration: InputDecoration(
-              // prefixIcon: Icon(Icons.audiotrack_rounded, color: cs.primary),
-              filled: true,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              fillColor: cs.surfaceContainerHighest.withOpacity(0.35),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: cs.outlineVariant),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: cs.outlineVariant),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: cs.primary, width: 2),
-              ),
-            ),
+          Wrap(
+            spacing: 12.0,
+            runSpacing: 12.0,
+            alignment: WrapAlignment.center,
+            children: TracksData.tracks.map((track) {
+              final isSelected = value == track.title.toLowerCase();
+              return _SoundButton(
+                track: track,
+                icon: _getIconForTrack(track.title),
+                isSelected: isSelected,
+                onTap: () => onChanged(track.title.toLowerCase()),
+              );
+            }).toList(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SoundButton extends StatelessWidget {
+  const _SoundButton({
+    required this.track,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final Track track;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final backgroundColor =
+        isSelected ? cs.primaryContainer : cs.surfaceContainerHighest.withOpacity(0.35);
+    final foregroundColor = isSelected ? cs.onPrimaryContainer : cs.onSurface;
+    final borderColor = isSelected ? cs.primary.withOpacity(0.75) : cs.outlineVariant.withOpacity(0.5);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: borderColor,
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              child: Icon(icon, size: 32, color: foregroundColor),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              track.title,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: foregroundColor, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -22,5 +22,15 @@ class TracksData {
         title: "Camp Fire",
         assetPath: "assets/audio/fire_noise.wav"
     ),
+    Track(
+        id: 'thunder_noise',
+        title: "Thunderstorm",
+        assetPath: "assets/audio/thunder_noise.mp3"
+    ),
+    Track(
+        id: 'white_noise',
+        title: "White Noise",
+        assetPath: "assets/audio/white_noise.mp3"
+    ),
   ];
 }
