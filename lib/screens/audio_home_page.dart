@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_sleepy/data/tracks.dart';
+import 'package:flutter_sleepy/screens/breathing_exercise_screen.dart';
 import 'package:flutter_sleepy/screens/explain_screen.dart';
 import 'package:flutter_sleepy/services/audio_service.dart';
 import 'package:flutter_sleepy/theme/app_theme.dart';
@@ -236,15 +237,29 @@ class _AudioHomePageState extends State<AudioHomePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.center,
-                    child: _buildHowItWorksButton(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildHowItWorksButton(),
+                      _buildBreathingExerciseButton(),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBreathingExerciseButton() {
+    return ThemedActionButton(
+      label: 'Breathing',
+      icon: Icons.self_improvement_outlined,
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const BreathingExerciseScreen()),
       ),
     );
   }
