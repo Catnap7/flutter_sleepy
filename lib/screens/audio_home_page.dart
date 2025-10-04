@@ -173,22 +173,8 @@ class _AudioHomePageState extends State<AudioHomePage> {
 
   int _resolveTrackIndex(String key) {
     final normalizedKey = key.trim().toLowerCase();
-
-    if (normalizedKey.contains('wave')) {
-      return _indexByTitleFragment('waves');
-    }
-    if (normalizedKey.replaceAll(' ', '') == 'campfire') {
-      return _indexByTitleFragment('camp fire');
-    }
-    if (normalizedKey.contains('rain')) {
-      return _indexByTitleFragment('rain');
-    }
-    return _indexByTitleFragment('pink noise');
-  }
-
-  int _indexByTitleFragment(String fragment) {
     final index = TracksData.tracks.indexWhere(
-      (track) => track.title.toLowerCase().contains(fragment),
+      (track) => track.title.toLowerCase() == normalizedKey,
     );
     return index >= 0 ? index : 0;
   }
@@ -268,15 +254,17 @@ class _AudioHomePageState extends State<AudioHomePage> {
       backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      actions: [/*
+      actions: [
         IconButton(
           tooltip: 'Theme',
           icon: const Icon(Icons.color_lens_outlined),
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ThemeSettingsScreen(controller: controller)),
+            MaterialPageRoute(
+                builder: (context) =>
+                    ThemeSettingsScreen(controller: widget.controller)),
           ),
-        ),*/
+        ),
       ],
       title: const Text('Sleepy Audio'),
     );
@@ -359,7 +347,7 @@ class _AudioHomePageState extends State<AudioHomePage> {
               borderRadius: BorderRadius.circular(12.0),
             ),
           ),
-          child: const Text('취소'),
+          child: const Text('Cancel'),
         ),
       );
     }
