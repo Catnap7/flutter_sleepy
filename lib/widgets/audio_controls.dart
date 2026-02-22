@@ -6,9 +6,21 @@ import 'package:just_audio/just_audio.dart';
 
 class AudioControls extends StatelessWidget {
   final AudioPlayer player;
+  final double volume;
+  final Stream<double> volumeStream;
+  final ValueChanged<double> onVolumeChanged;
   final ValueChanged<bool>? onPlayPauseChanged;
+  final Future<bool> Function()? onPlayRequested;
 
-  const AudioControls(this.player, {super.key, this.onPlayPauseChanged});
+  const AudioControls(
+    this.player, {
+    super.key,
+    required this.volume,
+    required this.volumeStream,
+    required this.onVolumeChanged,
+    this.onPlayPauseChanged,
+    this.onPlayRequested,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,11 +68,16 @@ class AudioControls extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         iconSize: 64.0,
-                        onPressed: () {
+                        onPressed: () async {
                           if (isPlaying) {
                             player.pause();
                             onPlayPauseChanged?.call(false);
                           } else {
+                            final canPlay = await (onPlayRequested?.call() ??
+                                Future.value(true));
+                            if (!canPlay) {
+                              return;
+                            }
                             player.play();
                             onPlayPauseChanged?.call(true);
                           }
@@ -99,8 +116,7 @@ class AudioControls extends StatelessWidget {
             "${speed}x",
             style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary
-            ),
+                color: Theme.of(context).colorScheme.primary),
           ),
           onPressed: () => _showSpeedDialog(context),
         );
@@ -111,20 +127,20 @@ class AudioControls extends StatelessWidget {
   void _showVolumeDialog(BuildContext context) {
     showSliderDialog(
       context: context,
-      title: "볼륨 조절",
+      title: "Volume",
       divisions: 10,
       min: 0.0,
       max: AppConstants.maxVolume,
-      value: player.volume,
-      stream: player.volumeStream,
-      onChanged: player.setVolume,
+      value: volume,
+      stream: volumeStream,
+      onChanged: onVolumeChanged,
     );
   }
 
   void _showSpeedDialog(BuildContext context) {
     showSliderDialog(
       context: context,
-      title: "재생 속도 조절",
+      title: "Playback speed",
       divisions: 10,
       min: AppConstants.minSpeed,
       max: AppConstants.maxSpeed,
