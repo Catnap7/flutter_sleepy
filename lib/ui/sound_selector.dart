@@ -19,6 +19,8 @@ class SoundSelectorCard extends StatelessWidget {
     if (lowerTitle.contains('waves')) return Icons.waves_outlined;
     if (lowerTitle.contains('fire')) return Icons.fireplace_outlined;
     if (lowerTitle.contains('pink')) return Icons.graphic_eq_outlined;
+    if (lowerTitle.contains('brown')) return Icons.blur_on_outlined;
+    if (lowerTitle.contains('fan')) return Icons.air_outlined;
     if (lowerTitle.contains('thunder')) return Icons.thunderstorm_outlined;
     if (lowerTitle.contains('white')) return Icons.noise_aware_outlined;
     return Icons.music_note_outlined; // Default icon
@@ -85,15 +87,18 @@ class _SoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final backgroundColor =
-        isSelected ? cs.primaryContainer : cs.surfaceContainerHighest.withOpacity(0.35);
+    final backgroundColor = isSelected
+        ? cs.primaryContainer
+        : cs.surfaceContainerHighest.withValues(alpha: 0.35);
     final foregroundColor = isSelected ? cs.onPrimaryContainer : cs.onSurface;
-    final borderColor = isSelected ? cs.primary.withOpacity(0.75) : cs.outlineVariant.withOpacity(0.5);
+    final borderColor = isSelected
+        ? cs.primary.withValues(alpha: 0.75)
+        : cs.outlineVariant.withValues(alpha: 0.5);
 
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 80,
+        width: 92,
         child: Column(
           children: [
             Container(
@@ -110,12 +115,20 @@ class _SoundButton extends StatelessWidget {
               child: Icon(icon, size: 32, color: foregroundColor),
             ),
             const SizedBox(height: 8),
-            Text(
-              track.title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: foregroundColor, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            SizedBox(
+              height: 34,
+              child: Text(
+                track.title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: foregroundColor,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      height: 1.15,
+                    ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

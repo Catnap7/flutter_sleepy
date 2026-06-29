@@ -1,66 +1,73 @@
 # Google Play Listing (English)
 
-## App name options
+## Recommended metadata
 
-- `Sleepy: Sleep Sounds & Timer`
-- `Sleepy - Sleep Sounds, White Noise`
-- `Sleepy: Rain, Pink Noise, Timer`
+- App name: `Sleepy: Sleep Sounds Timer`
+- Short description: `Offline rain, white noise, and fade-out sleep timer.`
+- Category: `Music & Audio`
+- Ads declaration: `No ads`
+- Data safety: `No data collected`
 
-## Short description (80 chars max)
+## Full description
 
-- `Fall asleep fast with calming sounds, sleep timer, and fade-out playback.`
-- `Sleep sounds, pink noise, and timer for stable background bedtime playback.`
-- `Rain, white noise, and bedtime timer. Offline-friendly sleep audio app.`
+Sleepy is a simple bedtime sound app for falling asleep with calm background audio.
 
-## Full description draft
+Start a sound, set a sleep timer, and put your phone down. Sleepy keeps the experience quiet: no account, no streaming, and no ads while you wind down.
 
-Sleepy helps you fall asleep with calming background sounds and a simple timer.
+### What Sleepy does
 
-Use one tap to start your sound, set a sleep timer, and relax.  
-Choose from rain, pink noise, white noise, waves, campfire, and thunderstorm.
+- Plays relaxing sleep sounds offline
+- Includes rain, pink noise, white noise, brown noise, fan noise, waves, campfire, and thunderstorm
+- Provides sleep timer presets from 15 minutes to 2 hours
+- Supports a custom sleep timer from 1 to 180 minutes
+- Fades volume down gently at the end of the timer
+- Keeps audio playing in the background while the screen is off
+- Includes a 4-7-8 breathing exercise for bedtime wind-down
+- Offers night-friendly themes and soft reactive visuals
 
-### Why users pick Sleepy
+### Built for bedtime
 
-- One-tap sound playback
-- Sleep timer with fade-out
-- Stable background playback
-- Breathing exercise for wind-down
-- Night-friendly visual theme
-- No account required
+Sleepy is designed for the moment when you are already tired. The controls are large, the layout is simple, and the most important actions stay on the first screen.
 
-### Sounds included
+Use Sleepy for:
 
-- Rain
-- Pink Noise
-- White Noise
-- Waves
-- Camp Fire
-- Thunderstorm
+- Falling asleep with rain or white noise
+- Masking sudden background sounds
+- Quiet focus or reading sessions
+- Short naps with an auto-stop timer
+- A calmer bedtime routine without signing in
 
 ### Notes
 
-- Battery optimization settings can affect background playback on some Android devices.
-- Sleepy provides optional in-app guidance if this setting is needed.
+Some Android devices may stop background audio when battery optimization is enabled. Sleepy includes optional in-app guidance if you need smoother overnight playback.
 
-## Screenshot storyboard (6-8)
+Sleepy is a relaxation and sleep-routine aid. It is not a medical device and does not diagnose, treat, or cure sleep disorders.
 
-1. `1 tap to sleep`
-2. `Sleep timer + fade out`
-3. `Stable background playback`
-4. `Breathing exercise to unwind`
-5. `Night-friendly themes`
-6. `No sign-up required`
-7. `Works with rain, pink noise, white noise`
-8. `Built for bedtime simplicity`
+## Screenshot storyboard
 
-## Store Listing Experiments
+1. `Offline sleep sounds` / `Rain, white noise, brown noise, fan, waves, fire, and thunderstorm`
+2. `Fade-out sleep timer` / `Auto-stop from 15 minutes to 2 hours`
+3. `Keeps playing with screen off` / `Background audio for bedtime`
+4. `One-tap bedtime controls` / `Large buttons for tired eyes`
+5. `4-7-8 breathing` / `Wind down before sleep`
+6. `No account required` / `A quiet app for quiet nights`
+
+## Store listing experiments
 
 ### Variant A: keyword-first
 
-- App name: `Sleepy: Sleep Sounds & Timer`
-- First screenshot title: `Sleep sounds in 1 tap`
+- App name: `Sleepy: Sleep Sounds Timer`
+- Short description: `Offline rain, white noise, and fade-out sleep timer.`
+- First screenshot title: `Offline sleep sounds`
 
-### Variant B: value-first
+### Variant B: white-noise-first
 
-- App name: `Sleepy: Offline Sleep Timer Sounds`
-- First screenshot title: `Offline bedtime sounds + timer`
+- App name: `Sleepy: White Noise Timer`
+- Short description: `Rain, white noise, and bedtime timer with gentle fade-out.`
+- First screenshot title: `White noise + sleep timer`
+
+### Variant C: simplicity-first
+
+- App name: `Sleepy: Bedtime Sounds`
+- Short description: `Simple offline sleep sounds with timer and background play.`
+- First screenshot title: `One tap to wind down`

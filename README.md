@@ -1,6 +1,6 @@
 # Sleepy – Bedtime Sound App (Flutter)
 
-Sleepy plays calming sounds (Rain, Pink Noise, Fire) with a sleep timer that keeps playing in the background and stops at the set time.
+Sleepy plays offline calming sounds with a sleep timer that keeps playing in the background and stops at the set time. It is positioned as a quiet, no-account, no-ads bedtime utility.
 
 ## Run locally
 
@@ -26,6 +26,7 @@ Run all tests:
 Files:
 - test/widget_test.dart – verifies the home title renders
 - test/duration_formatter_test.dart – verifies DurationFormatter formatting
+- test/sound_preference_service_test.dart – verifies last-used sound restore
 
 ## Troubleshooting
 
@@ -34,6 +35,8 @@ Files:
 - For iOS, open ios/Runner.xcworkspace in Xcode and run on a device/simulator.
 
 ## About
+- Offline sleep sounds: Rain, Pink Noise, White Noise, Brown Noise, Fan Noise, Waves, Camp Fire, Thunderstorm.
+- Sleep timer presets, custom timer, and fade-out at timer end.
 - Dark-first UI, Material 3, large tap targets, accessible labels.
 - Background playback via flutter_background_service.
 - Audio via just_audio.

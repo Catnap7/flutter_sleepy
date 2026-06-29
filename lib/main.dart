@@ -2,14 +2,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_sleepy/constants/admob_constants.dart';
 import 'package:flutter_sleepy/screens/audio_home_page.dart';
 import 'package:flutter_sleepy/screens/theme_settings_screen.dart';
-import 'package:flutter_sleepy/services/app_open_ad_manager.dart';
 import 'package:flutter_sleepy/services/background_service_stub.dart'
     if (dart.library.io) 'package:flutter_sleepy/services/background_service.dart';
 import 'package:flutter_sleepy/services/metrics_service.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:flutter_sleepy/theme/dynamic_color_helper.dart';
 import 'package:flutter_sleepy/theme/theme_controller.dart';
@@ -27,9 +24,6 @@ Future<void> main() async {
   }
   final controller = ThemeController();
   await controller.load();
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    await MobileAds.instance.initialize();
-  }
   await MetricsService.instance.trackAppOpen();
   runApp(MyApp(controller: controller));
 }
@@ -47,20 +41,13 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+class _MyAppState extends State<MyApp> {
   ColorScheme? _dynLight;
   ColorScheme? _dynDark;
-  final AppOpenAdManager _appOpenAdManager =
-      AppOpenAdManager(adUnitId: androidAppOpenAdUnitId);
-  DateTime? _lastPausedAt;
-
-  bool get _enableAppOpenAds =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     // Fetch dynamic color schemes (Android 12+)
     fetchDynamicSchemes().then((schemes) {
       setState(() {
@@ -69,41 +56,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       });
     });
     widget.controller.addListener(_onThemeChanged);
-    if (_enableAppOpenAds) {
-      _appOpenAdManager.loadAd(showOnLoad: true);
-    }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    if (_enableAppOpenAds) {
-      _appOpenAdManager.dispose();
-    }
     widget.controller.removeListener(_onThemeChanged);
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_enableAppOpenAds) {
-      return;
-    }
-
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      _lastPausedAt = DateTime.now();
-      return;
-    }
-
-    if (state == AppLifecycleState.resumed) {
-      final lastPausedAt = _lastPausedAt;
-      if (lastPausedAt != null &&
-          DateTime.now().difference(lastPausedAt) >=
-              const Duration(seconds: 5)) {
-        _appOpenAdManager.showAdIfAvailable();
-      }
-    }
   }
 
   void _onThemeChanged() => setState(() {});

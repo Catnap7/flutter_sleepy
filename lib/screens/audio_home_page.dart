@@ -1,15 +1,14 @@
 import 'dart:ui';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_sleepy/constants/admob_constants.dart';
 import 'package:flutter_sleepy/data/tracks.dart';
 import 'package:flutter_sleepy/screens/breathing_exercise_screen.dart';
 import 'package:flutter_sleepy/screens/explain_screen.dart';
 import 'package:flutter_sleepy/screens/theme_settings_screen.dart';
 import 'package:flutter_sleepy/services/audio_service.dart';
 import 'package:flutter_sleepy/services/metrics_service.dart';
+import 'package:flutter_sleepy/services/sound_preference_service.dart';
 import 'package:flutter_sleepy/theme/app_theme.dart';
 import 'package:flutter_sleepy/ui/themed_action_button.dart';
 import 'package:flutter_sleepy/utils/battery_optimization.dart';
@@ -17,7 +16,6 @@ import 'package:flutter_sleepy/utils/duration_formatter.dart';
 import 'package:flutter_sleepy/widgets/audio_controls.dart';
 import 'package:flutter_sleepy/widgets/timer_button.dart';
 import 'package:flutter_sleepy/widgets/custom_timer_dialog.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_sleepy/ui/soundscape_adapter.dart';
 import 'package:flutter_sleepy/theme/theme_controller.dart';
@@ -33,6 +31,12 @@ class _TimerPreset {
 enum _BatteryPromptAction {
   allow,
   notNow,
+}
+
+enum _BatteryOptimizationStatus {
+  unsupported,
+  allowed,
+  needsAttention,
 }
 
 /// The main home page for the Sleepy Audio app.  It exposes controls
@@ -60,8 +64,9 @@ class _AudioHomePageState extends State<AudioHomePage>
   bool _fadeOutEnabled = true;
   bool _wasPlaying = false;
   Duration _lastRemainingTime = Duration.zero;
-  NativeAd? _nativeAd;
-  bool _isNativeAdLoaded = false;
+  Future<_BatteryOptimizationStatus>? _batteryStatusFuture;
+  final SoundPreferenceService _soundPreferences =
+      const SoundPreferenceService();
 
   static const List<_TimerPreset> _timerPresets = [
     _TimerPreset('15m', Duration(minutes: 15)),
@@ -76,8 +81,8 @@ class _AudioHomePageState extends State<AudioHomePage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _batteryStatusFuture = _loadBatteryOptimizationStatus();
     _initializeServices();
-    _loadNativeAd();
   }
 
   Future<void> _initializeServices() async {
@@ -101,6 +106,10 @@ class _AudioHomePageState extends State<AudioHomePage>
 
   Future<void> _initializeAudio() async {
     await _audioService.initialize();
+    final savedTrackIndex = await _soundPreferences.loadSelectedTrackIndex();
+    if (mounted && savedTrackIndex != _selectedIndex) {
+      setState(() => _selectedIndex = savedTrackIndex);
+    }
     final didLoadInitialTrack = await _setTrack(_selectedIndex);
     if (!didLoadInitialTrack) {
       await _loadFirstPlayableTrack();
@@ -203,6 +212,7 @@ class _AudioHomePageState extends State<AudioHomePage>
         'track_id': TracksData.tracks[index].id,
       },
     ));
+    unawaited(_soundPreferences.saveSelectedTrack(TracksData.tracks[index]));
   }
 
   Future<void> _loadFirstPlayableTrack() async {
@@ -217,6 +227,7 @@ class _AudioHomePageState extends State<AudioHomePage>
       if (_selectedIndex != i) {
         setState(() => _selectedIndex = i);
       }
+      unawaited(_soundPreferences.saveSelectedTrack(TracksData.tracks[i]));
       return;
     }
     debugPrint('No playable tracks found.');
@@ -263,6 +274,7 @@ class _AudioHomePageState extends State<AudioHomePage>
           MetricsService.instance.track('battery_optimization_prompt_shown'));
       if (action == _BatteryPromptAction.allow) {
         await BatteryOptimizationHandler.requestIgnoreBatteryOptimization();
+        _refreshBatteryOptimizationStatus();
         unawaited(
             MetricsService.instance.track('battery_optimization_allowed'));
       } else {
@@ -331,6 +343,31 @@ class _AudioHomePageState extends State<AudioHomePage>
     );
   }
 
+  Future<_BatteryOptimizationStatus> _loadBatteryOptimizationStatus() async {
+    if (!await BatteryOptimizationHandler.isSupported()) {
+      return _BatteryOptimizationStatus.unsupported;
+    }
+    final isAllowed = await BatteryOptimizationHandler.isIgnored();
+    return isAllowed
+        ? _BatteryOptimizationStatus.allowed
+        : _BatteryOptimizationStatus.needsAttention;
+  }
+
+  void _refreshBatteryOptimizationStatus() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _batteryStatusFuture = _loadBatteryOptimizationStatus();
+    });
+  }
+
+  Future<void> _requestBatteryOptimizationAllowance() async {
+    await BatteryOptimizationHandler.requestIgnoreBatteryOptimization();
+    _refreshBatteryOptimizationStatus();
+    unawaited(MetricsService.instance.track('battery_optimization_allowed'));
+  }
+
   void _sendNowPlayingUpdate({bool force = false}) {
     final service = FlutterBackgroundService();
     final trackTitle = TracksData.tracks[_selectedIndex].title;
@@ -370,72 +407,11 @@ class _AudioHomePageState extends State<AudioHomePage>
   }
 
   int _resolveTrackIndex(String key) {
-    final normalizedKey = key.trim().toLowerCase();
-    final index = TracksData.tracks.indexWhere(
-      (track) => track.title.toLowerCase() == normalizedKey,
-    );
-    return index >= 0 ? index : 0;
-  }
-
-  bool get _shouldShowNativeAd =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-
-  void _loadNativeAd() {
-    if (!_shouldShowNativeAd) {
-      return;
-    }
-
-    _nativeAd = NativeAd(
-      adUnitId: androidNativeAdUnitId,
-      request: const AdRequest(),
-      nativeTemplateStyle: NativeTemplateStyle(
-        templateType: TemplateType.medium,
-      ),
-      listener: NativeAdListener(
-        onAdLoaded: (ad) {
-          if (!mounted) {
-            ad.dispose();
-            return;
-          }
-          setState(() {
-            _nativeAd = ad as NativeAd;
-            _isNativeAdLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          debugPrint('NativeAd failed to load: $error');
-          if (!mounted) {
-            return;
-          }
-          setState(() {
-            _nativeAd = null;
-            _isNativeAdLoaded = false;
-          });
-        },
-      ),
-    )..load();
-  }
-
-  Widget _buildNativeAdSection() {
-    if (!_shouldShowNativeAd || !_isNativeAdLoaded || _nativeAd == null) {
-      return const SizedBox.shrink();
-    }
-
-    return _glass(
-      Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: SizedBox(
-          height: 320,
-          child: AdWidget(ad: _nativeAd!),
-        ),
-      ),
-    );
+    return TracksData.indexForTitleKey(key);
   }
 
   @override
   void dispose() {
-    _nativeAd?.dispose();
     _audioService.dispose();
     _timerSub?.cancel();
     _playerSub?.cancel();
@@ -455,6 +431,7 @@ class _AudioHomePageState extends State<AudioHomePage>
     }
     if (state == AppLifecycleState.resumed) {
       unawaited(MetricsService.instance.track('returned_foreground'));
+      _refreshBatteryOptimizationStatus();
     }
   }
 
@@ -505,14 +482,14 @@ class _AudioHomePageState extends State<AudioHomePage>
                       _sendNowPlayingUpdate(force: true),
                 ),
                 const SizedBox(height: 20),
+                _buildBatteryOptimizationStatus(),
+                const SizedBox(height: 20),
                 _glass(
                   Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: _buildTimerSection(),
                   ),
                 ),
-                const SizedBox(height: 20),
-                _buildNativeAdSection(),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -524,6 +501,80 @@ class _AudioHomePageState extends State<AudioHomePage>
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBatteryOptimizationStatus() {
+    return _glass(
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: FutureBuilder<_BatteryOptimizationStatus>(
+          future: _batteryStatusFuture,
+          builder: (context, snapshot) {
+            final status = snapshot.data;
+            final colorScheme = Theme.of(context).colorScheme;
+            final needsAttention =
+                status == _BatteryOptimizationStatus.needsAttention;
+            final isAllowed = status == _BatteryOptimizationStatus.allowed;
+            final icon = needsAttention
+                ? Icons.battery_alert_outlined
+                : isAllowed
+                    ? Icons.check_circle_outline
+                    : Icons.battery_saver_outlined;
+            final label = needsAttention
+                ? 'Battery optimized'
+                : isAllowed
+                    ? 'Background playback allowed'
+                    : 'Background playback ready';
+            final detail = needsAttention
+                ? 'Allow Sleepy for steadier screen-off audio.'
+                : isAllowed
+                    ? 'Sleepy can keep playing while the screen is off.'
+                    : 'No extra battery setting is needed on this device.';
+
+            return Row(
+              children: [
+                Icon(
+                  icon,
+                  color: needsAttention
+                      ? colorScheme.tertiary
+                      : colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        detail,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.2,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (needsAttention) ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: _requestBatteryOptimizationAllowance,
+                    child: const Text('Allow'),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );

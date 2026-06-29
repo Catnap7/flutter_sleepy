@@ -3,7 +3,8 @@ import '../utils/soundscapes.dart';
 
 /// Global route observer used to detect when a page becomes hidden/visible.
 class SoundscapeRouteObserver {
-  static final RouteObserver<ModalRoute<void>> instance = RouteObserver<ModalRoute<void>>();
+  static final RouteObserver<ModalRoute<void>> instance =
+      RouteObserver<ModalRoute<void>>();
 }
 
 /// Map our app's sound key to the Soundscape enum.
@@ -12,7 +13,7 @@ Soundscape mapSoundKeyToScape(String key) {
   final k = key.trim().toLowerCase();
   if (k.contains('wave')) return Soundscape.waves;
   if (k.replaceAll(' ', '') == 'campfire') return Soundscape.campfire;
-  if (k.contains('rainy')) return Soundscape.rainy;
+  if (k.contains('rainy') || k.contains('thunder')) return Soundscape.rainy;
   return Soundscape.pinknoise; // default
 }
 
@@ -25,7 +26,8 @@ class LifecycleGate extends StatefulWidget {
   State<LifecycleGate> createState() => _LifecycleGateState();
 }
 
-class _LifecycleGateState extends State<LifecycleGate> with WidgetsBindingObserver {
+class _LifecycleGateState extends State<LifecycleGate>
+    with WidgetsBindingObserver {
   bool _active = true;
 
   @override
@@ -46,7 +48,8 @@ class _LifecycleGateState extends State<LifecycleGate> with WidgetsBindingObserv
   }
 
   @override
-  Widget build(BuildContext context) => TickerMode(enabled: _active, child: widget.child);
+  Widget build(BuildContext context) =>
+      TickerMode(enabled: _active, child: widget.child);
 }
 
 /// Drop-in container: renders the reactive FX background under your content.
@@ -54,7 +57,7 @@ class SoundReactiveBackground extends StatelessWidget {
   const SoundReactiveBackground({
     super.key,
     required this.currentSoundKey,
-    this.intensity = 1.0,          // 0.5 ~ 1.5 recommended
+    this.intensity = 1.0, // 0.5 ~ 1.5 recommended
     required this.child,
   });
 
@@ -68,7 +71,8 @@ class SoundReactiveBackground extends StatelessWidget {
     return LifecycleGate(
       child: Stack(
         children: [
-          Positioned.fill(child: SoundscapeBackground(mode: scape, intensity: intensity)),
+          Positioned.fill(
+              child: SoundscapeBackground(mode: scape, intensity: intensity)),
           Positioned.fill(
             child: Scaffold(
               backgroundColor: Colors.transparent,

@@ -5,8 +5,6 @@ import 'package:flutter_sleepy/models/track.dart';
 import 'package:just_audio/just_audio.dart';
 
 class AudioService {
-  static const double _pinkNoiseVolumeMultiplier = 0.88;
-
   final AudioPlayer _player;
   final StreamController<Duration> _timerController;
   final StreamController<double> _volumeController;
@@ -76,8 +74,7 @@ class AudioService {
       );
       // 반복 모드 활성화
       await _player.setLoopMode(LoopMode.all);
-      _currentTrackVolumeMultiplier =
-          track.id == 'pink_noise' ? _pinkNoiseVolumeMultiplier : 1.0;
+      _currentTrackVolumeMultiplier = track.volumeMultiplier;
       await _player.setVolume(_effectiveVolume);
     } on PlayerException catch (e) {
       debugPrint('Error loading audio source: $e');

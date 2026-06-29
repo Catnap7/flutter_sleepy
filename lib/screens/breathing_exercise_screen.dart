@@ -30,9 +30,9 @@ extension _BreathingSoundX on _BreathingSound {
       case _BreathingSound.none:
         return null;
       case _BreathingSound.rainy:
-        return 'assets/audio/rain_noise.wav';
+        return 'assets/audio/rain_noise.mp3';
       case _BreathingSound.campFire:
-        return 'assets/audio/fire_noise.wav';
+        return 'assets/audio/fire_noise.mp3';
       case _BreathingSound.waves:
         return 'assets/audio/wave.mp3';
     }

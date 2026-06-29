@@ -2,7 +2,8 @@
 
 ## App name options
 
-- `Sleepy - Sleep Sounds Timer`
+- `Sleepy: Sleep Sounds Timer`
+- `Sleepy: White Noise Timer`
 - `Sleepy: Sleep Sounds`
 
 ## Subtitle options (30 chars max)
@@ -17,20 +18,22 @@
 
 ## Promotional text (optional)
 
-`Fall asleep faster with calming sounds, a sleep timer, and smooth fade-out playback.`
+`Offline rain, white noise, and a fade-out sleep timer for quiet nights.`
 
 ## Description draft
 
-Sleepy is a simple bedtime audio app for falling asleep faster.
+Sleepy is a simple bedtime audio app for falling asleep with calm background sound.
 
 Pick a sound, press play, and set your timer.  
-No account needed.
+No account, no streaming, and no ads while you wind down.
 
 ### Included sounds
 
 - Rain
 - Pink Noise
 - White Noise
+- Brown Noise
+- Fan Noise
 - Waves
 - Camp Fire
 - Thunderstorm
@@ -42,6 +45,8 @@ No account needed.
 - Background playback support
 - Breathing exercise for wind-down
 - Night-friendly visual mode
+- Offline playback
+- No account required
 
 ## Product Page Optimization (PPO) variants
 
