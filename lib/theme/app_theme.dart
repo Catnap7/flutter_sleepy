@@ -328,7 +328,6 @@ extension _AppThemeAccent on ThemeData {
 
   ThemeData _overrideWithAccent(SoundAccent accent,
       {bool recolorSecondary = false}) {
-    final base = this;
     final cs = colorScheme;
 
 // Build a tiny seed scheme for the same brightness so tones are valid.
@@ -369,9 +368,9 @@ extension _AppThemeAccent on ThemeData {
 // Optional: tweak slider colors to ensure coherence if you set them explicitly.
       sliderTheme: sliderTheme.copyWith(
         activeTrackColor: next.primary,
-        inactiveTrackColor: next.primary.withOpacity(0.3),
+        inactiveTrackColor: next.primary.withValues(alpha: 0.3),
         thumbColor: next.primary,
-        overlayColor: next.primary.withOpacity(0.12),
+        overlayColor: next.primary.withValues(alpha: 0.12),
       ),
 // Optional: make focused input border follow the accent.
       inputDecorationTheme: inputDecorationTheme.copyWith(

@@ -14,11 +14,12 @@ class ThemeController extends ChangeNotifier {
   static const _intensityKey = 'bg_intensity_v1';
 
   AppThemeOption _option = AppThemeOption.sleep; // default to sleep-friendly
-  ThemeMode _themeMode = ThemeMode.system;
   double _bgIntensity = 1.0; // 0.5 ~ 1.5
 
   AppThemeOption get option => _option;
-  ThemeMode get themeMode => _themeMode;
+  // Every soundscape is intentionally night-toned. Keeping the Material
+  // brightness dark prevents unreadable dark text when Android uses light mode.
+  ThemeMode get themeMode => ThemeMode.dark;
   double get bgIntensity => _bgIntensity;
 
   Future<void> load() async {
@@ -77,4 +78,3 @@ class ThemeController extends ChangeNotifier {
     }
   }
 }
-

@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_sleepy/constants/constants.dart';
-import 'package:flutter_sleepy/widgets/showSliderDialog.dart';
+import 'package:flutter_sleepy/widgets/show_slider_dialog.dart';
 import 'package:just_audio/just_audio.dart';
 
 class AudioControls extends StatelessWidget {

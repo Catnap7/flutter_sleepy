@@ -27,8 +27,7 @@ Future<void> initializeService() async {
       await flutterLocalNotificationsPlugin.initialize(
         const InitializationSettings(
           iOS: DarwinInitializationSettings(),
-          // Use the app launcher icon; avoids missing-resource crashes.
-          android: AndroidInitializationSettings('ic_launcher'),
+          android: AndroidInitializationSettings('ic_stat_sleepy'),
         ),
       );
     }

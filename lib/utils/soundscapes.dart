@@ -437,7 +437,7 @@ class _WavesPainter extends CustomPainter {
       final alpha = 0.18 - i * 0.03;
       final color = i == 0
           ? _op(const Color(0xFF9ADCF8), 0.18)
-          : _op(Colors.white, (alpha.clamp(0.06, 0.18) as double));
+          : _op(Colors.white, alpha.clamp(0.06, 0.18));
       final paint = Paint()
         ..color = color
         ..style = PaintingStyle.fill;
@@ -450,7 +450,7 @@ class _WavesPainter extends CustomPainter {
 }
 
 class _MoonGlow extends StatelessWidget {
-  const _MoonGlow({super.key});
+  const _MoonGlow();
 
   @override
   Widget build(BuildContext context) {
@@ -515,7 +515,7 @@ class _Campfire extends StatelessWidget {
 }
 
 class _FlameCore extends StatefulWidget {
-  const _FlameCore({super.key});
+  const _FlameCore();
 
   @override
   State<_FlameCore> createState() => _FlameCoreState();
@@ -750,7 +750,7 @@ class _EmberPainter extends CustomPainter {
 }
 
 class _WarmFlicker extends StatefulWidget {
-  const _WarmFlicker({super.key});
+  const _WarmFlicker();
 
   @override
   State<_WarmFlicker> createState() => _WarmFlickerState();
@@ -807,17 +807,11 @@ extension on Offset {
   double get len => sqrt(dx * dx + dy * dy);
 
   Offset normalized() => len == 0 ? this : this * (1 / len);
-
-  Offset operator +(Offset o) => Offset(dx + o.dx, dy + o.dy);
-
-  Offset operator -(Offset o) => Offset(dx - o.dx, dy - o.dy);
-
-  Offset operator *(double s) => Offset(dx * s, dy * s);
 }
 
 // Optional: simple vector logs (off by default)
 class _VectorLogs extends StatelessWidget {
-  const _VectorLogs({super.key});
+  const _VectorLogs();
 
   @override
   Widget build(BuildContext context) {
@@ -831,7 +825,7 @@ class _LogsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width * 0.5;
     final y = size.height * 0.92;
-    final rrect = (Rect rect, double r) =>
+    ui.RRect rrect(Rect rect, double r) =>
         RRect.fromRectAndRadius(rect, Radius.circular(r));
     Paint logPaint(Color c) => Paint()
       ..color = c
@@ -932,19 +926,19 @@ class _PinkNoisePainter extends CustomPainter {
     final ampBase = 20.0 * intensity;
     final waves = [
       _PinkWaveSpec(
-          color: const Color(0xFFFD7EB2).withOpacity(0.35),
+          color: const Color(0xFFFD7EB2).withValues(alpha: 0.35),
           amp: ampBase * 0.8,
           k: 2.0,
           speed: 0.9,
           base: 0.77),
       _PinkWaveSpec(
-          color: const Color(0xFFFC93C7).withOpacity(0.35),
+          color: const Color(0xFFFC93C7).withValues(alpha: 0.35),
           amp: ampBase * 1.1,
           k: 1.5,
           speed: 1.2,
           base: 0.79),
       _PinkWaveSpec(
-          color: const Color(0xFFFFABD6).withOpacity(0.35),
+          color: const Color(0xFFFFABD6).withValues(alpha: 0.35),
           amp: ampBase * 1.35,
           k: 1.0,
           speed: 1.6,

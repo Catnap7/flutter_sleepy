@@ -16,6 +16,9 @@ class AudioService {
   double _volumeBeforeFadeOut = 1.0;
   double _userVolume = 1.0;
   double _currentTrackVolumeMultiplier = 1.0;
+  bool _initialized = false;
+  StreamSubscription<AudioInterruptionEvent>? _interruptionSubscription;
+  StreamSubscription<PlaybackEvent>? _playbackEventSubscription;
 
   AudioService()
       : _player = AudioPlayer(),
@@ -29,6 +32,9 @@ class AudioService {
   double get volume => _userVolume;
 
   Future<void> initialize() async {
+    if (_initialized) {
+      return;
+    }
     final session = await AudioSession.instance;
     await session.configure(AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playback,
@@ -43,7 +49,8 @@ class AudioService {
     await session.setActive(true);
 
     // 오디오 인터럽트 핸들링 추가
-    session.interruptionEventStream.listen((event) {
+    await _interruptionSubscription?.cancel();
+    _interruptionSubscription = session.interruptionEventStream.listen((event) {
       if (event.begin) {
         _player.pause();
       } else {
@@ -53,12 +60,14 @@ class AudioService {
       }
     });
 
+    await _playbackEventSubscription?.cancel();
     _setupAudioErrorHandling();
     _volumeController.add(_userVolume);
+    _initialized = true;
   }
 
   void _setupAudioErrorHandling() {
-    _player.playbackEventStream.listen(
+    _playbackEventSubscription = _player.playbackEventStream.listen(
       (_) {},
       onError: (Object e, StackTrace stackTrace) {
         debugPrint('Audio playback error: $e');
@@ -184,6 +193,8 @@ class AudioService {
 
   void dispose() {
     _timer?.cancel();
+    unawaited(_interruptionSubscription?.cancel());
+    unawaited(_playbackEventSubscription?.cancel());
     _player.dispose();
     _timerController.close();
     _volumeController.close();

@@ -15,24 +15,27 @@
 /// Tips:
 /// - Decrease intensity on low-end devices (e.g., 0.8)
 /// - You can place it above/below rain/waves as desired.
+library;
 
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-Color _op(Color c, double o) => c.withAlpha(((o.clamp(0.0, 1.0)) * 255).round());
+Color _op(Color c, double o) =>
+    c.withAlpha(((o.clamp(0.0, 1.0)) * 255).round());
 
 class LowMist extends StatefulWidget {
   const LowMist({
     super.key,
-    this.intensity = 0.5,      // scales wisp count, blur, opacity
-    this.heightFraction = 0.45, // portion of the screen height covered from bottom
-    this.color = Colors.white,  // fog color (usually white)
-    this.baseOpacity = 0.10,    // background gradient opacity near bottom
-    this.wispOpacity = 0.08,    // individual wisp max opacity
-    this.speed = 14.0,          // px/s horizontal drift speed (scaled by intensity)
-    this.blurSigma = 10.0,      // blur for wisps
+    this.intensity = 0.5, // scales wisp count, blur, opacity
+    this.heightFraction =
+        0.45, // portion of the screen height covered from bottom
+    this.color = Colors.white, // fog color (usually white)
+    this.baseOpacity = 0.10, // background gradient opacity near bottom
+    this.wispOpacity = 0.08, // individual wisp max opacity
+    this.speed = 14.0, // px/s horizontal drift speed (scaled by intensity)
+    this.blurSigma = 10.0, // blur for wisps
   });
 
   final double intensity;
@@ -49,11 +52,11 @@ class LowMist extends StatefulWidget {
 
 class _Wisp {
   _Wisp(this.p, this.rx, this.ry, this.vx, this.phase, this.phaseSpeed);
-  Offset p;      // center position
-  double rx;     // x radius
-  double ry;     // y radius
-  double vx;     // horizontal speed (px/s)
-  double phase;  // for subtle vertical wobble
+  Offset p; // center position
+  double rx; // x radius
+  double ry; // y radius
+  double vx; // horizontal speed (px/s)
+  double phase; // for subtle vertical wobble
   double phaseSpeed; // wobble speed
 }
 
@@ -66,7 +69,9 @@ class _LowMistState extends State<LowMist> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 16))..repeat();
+    _c = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 16))
+      ..repeat();
   }
 
   @override
@@ -84,18 +89,17 @@ class _LowMistState extends State<LowMist> with SingleTickerProviderStateMixin {
           final hTop = s.height * (1.0 - widget.heightFraction);
           final y = lerpDouble(hTop + 8, s.height - 8, rnd.nextDouble())!;
           final x = rnd.nextDouble() * s.width;
-          final rx = 80 + rnd.nextDouble() * 160;   // wide ovals
-          final ry = 18 + rnd.nextDouble() * 34;    // shallow height
-          final vx = (widget.speed + rnd.nextDouble() * widget.speed) * (rnd.nextBool() ? 1 : -1);
+          final rx = 80 + rnd.nextDouble() * 160; // wide ovals
+          final ry = 18 + rnd.nextDouble() * 34; // shallow height
+          final vx = (widget.speed + rnd.nextDouble() * widget.speed) *
+              (rnd.nextBool() ? 1 : -1);
           final ph = rnd.nextDouble() * 2 * pi;
-          final ps = 0.4 + rnd.nextDouble() * 0.8;  // wobble speed
+          final ps = 0.4 + rnd.nextDouble() * 0.8; // wobble speed
           return _Wisp(Offset(x, y), rx, ry, vx, ph, ps);
         }));
       last = s;
     }
   }
-
-  int _lastMs = DateTime.now().millisecondsSinceEpoch;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +166,8 @@ class _LowMistPainter extends CustomPainter {
           _op(color, baseOpacity),
         ],
       );
-    canvas.drawRect(Rect.fromLTWH(0, yTop, size.width, size.height - yTop), baseGrad);
+    canvas.drawRect(
+        Rect.fromLTWH(0, yTop, size.width, size.height - yTop), baseGrad);
 
     // 2) Drifting wisps (blurred ovals)
     final glow = Paint()
@@ -182,7 +187,8 @@ class _LowMistPainter extends CustomPainter {
       if (nx > size.width + w.rx) nx = -w.rx;
       w.p = Offset(nx, ny);
 
-      final rect = Rect.fromCenter(center: w.p, width: w.rx * 2, height: w.ry * 2);
+      final rect =
+          Rect.fromCenter(center: w.p, width: w.rx * 2, height: w.ry * 2);
       canvas.drawOval(rect, glow); // soft halo
       canvas.drawOval(rect, core); // subtle core
     }

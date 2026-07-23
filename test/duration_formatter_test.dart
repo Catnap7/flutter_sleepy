@@ -9,7 +9,8 @@ void main() {
 
     test('formats hours, minutes, seconds', () {
       expect(
-        DurationFormatter.format(const Duration(hours: 1, minutes: 23, seconds: 45)),
+        DurationFormatter.format(
+            const Duration(hours: 1, minutes: 23, seconds: 45)),
         '01:23:45',
       );
     });
@@ -19,7 +20,10 @@ void main() {
     });
 
     test('formats long duration', () {
-      expect(DurationFormatter.format(const Duration(hours: 27, minutes: 5, seconds: 9)), '27:05:09');
+      expect(
+          DurationFormatter.format(
+              const Duration(hours: 27, minutes: 5, seconds: 9)),
+          '27:05:09');
     });
   });
 }

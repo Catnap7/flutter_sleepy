@@ -13,7 +13,8 @@ Commands:
 2. flutter run
 
 Notes:
-- On first launch on Android, you may be prompted to allow ignoring battery optimizations for stable background playback.
+- On Android 13+, the first playback request asks for notification permission so background playback stays visible.
+- The home screen has an optional battery-optimization `Allow` action for devices that restrict screen-off playback.
 - Background service notification will show current state (Ready / Playing / remaining time).
 
 ## Tests
@@ -24,7 +25,9 @@ Run all tests:
 - flutter test
 
 Files:
-- test/widget_test.dart – verifies the home title renders
+- test/widget_test.dart – verifies the home title and 200% text-scale sound selector
+- test/app_startup_test.dart – verifies best-effort startup failure and timeout handling
+- test/android_resource_test.dart – verifies the Android notification icon and permission declaration
 - test/duration_formatter_test.dart – verifies DurationFormatter formatting
 - test/sound_preference_service_test.dart – verifies last-used sound restore
 

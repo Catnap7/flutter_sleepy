@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-/// Revamped "How it works" page for Pink Noise.
+/// Explains how Sleepy works without making medical or sleep-outcome claims.
 class ExplainScreenV2 extends StatefulWidget {
   const ExplainScreenV2({super.key});
 
@@ -31,7 +31,7 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text('Sleep benefits of pink noise'),
+            title: const Text('How Sleepy works'),
             flexibleSpace: const FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: _HeaderWavesTicker(),
@@ -42,28 +42,28 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
             sliver: SliverList.list(children: const [
               SizedBox(height: 8),
               _EffectCard(
-                icon: Icons.nightlight_round,
-                title: 'Better sleep quality',
+                icon: Icons.graphic_eq_rounded,
+                title: 'Create a steady sound layer',
                 description:
-                    'Pink noise can support deeper sleep and improve overall sleep quality. You may sleep longer and wake up feeling more refreshed.',
+                    'Choose from eight offline sounds. A steady background can make sudden changes in your surroundings feel less noticeable.',
               ),
               _EffectCard(
-                icon: Icons.psychology_alt,
-                title: 'Improved focus and memory',
+                icon: Icons.bedtime_rounded,
+                title: 'Build a wind-down cue',
                 description:
-                    'Better sleep helps your brain recover. Pink noise is associated with stronger memory consolidation and clearer daytime focus.',
+                    'Using the same comfortable sound as part of your bedtime routine can become a familiar cue to slow down and relax.',
               ),
               _EffectCard(
-                icon: Icons.hearing,
-                title: 'Tinnitus masking support',
+                icon: Icons.tune_rounded,
+                title: 'Adjust it to your space',
                 description:
-                    'As a stable background sound, pink noise may make tinnitus less noticeable for some listeners.',
+                    'Pick the sound, volume, and playback speed that feel comfortable. Sleepy keeps these controls on your device.',
               ),
               _EffectCard(
-                icon: Icons.self_improvement,
-                title: 'Lower stress before bed',
+                icon: Icons.timer_outlined,
+                title: 'Let the timer finish gently',
                 description:
-                    'Soft, consistent audio can calm your mind. Pink noise helps create a relaxing bedtime routine.',
+                    'Set a preset or custom timer, then use fade-out to lower the sound gradually before playback stops.',
               ),
               SizedBox(height: 16),
             ]),
@@ -73,11 +73,11 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               title: 'How it works',
               children: [
                 _Bullet(
-                    'Pink noise follows a 1/f power spectrum: lower frequencies carry more energy and higher frequencies gently roll off.'),
+                    'All eight sound files are included in the app, so playback works offline without streaming.'),
                 _Bullet(
-                    'This smoother profile makes sudden environmental sounds feel less sharp and less disruptive.'),
+                    'The selected sound loops continuously while the timer, speed, and fade-out controls shape playback.'),
                 _Bullet(
-                    'That can reduce nighttime arousals and help keep sleep stages more stable.'),
+                    'Background playback shows an Android foreground notification while sound is running outside the app.'),
               ],
             ),
           ),
@@ -86,11 +86,22 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
               title: 'Usage tips',
               children: [
                 _Bullet(
-                    'Start at a low volume and increase slowly. Keep it below normal conversation level.'),
+                    'Start at a low, comfortable volume. Stop if the sound causes discomfort.'),
                 _Bullet(
-                    'Use a 30-60 minute timer by default, then adjust based on your sleep pattern.'),
+                    'Use a timer and fade-out to avoid playing longer than you need.'),
                 _Bullet(
-                    'Many people find a bedside speaker more comfortable than earphones overnight.'),
+                    'Do not use Sleepy while driving or anywhere you need to hear alerts and your surroundings.'),
+              ],
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: _SectionCard(
+              title: 'Important note',
+              children: [
+                _Bullet(
+                    'Sleepy is a relaxation and sound-timer tool. It does not diagnose, treat, or prevent sleep, hearing, or medical conditions.'),
+                _Bullet(
+                    'For persistent sleep difficulties, tinnitus, hearing concerns, or other symptoms, talk with a qualified healthcare professional.'),
               ],
             ),
           ),
@@ -101,8 +112,8 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.black.withOpacity(0.5)
-              : Colors.white.withOpacity(0.9),
+              ? Colors.black.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.9),
           border: Border(
             top: BorderSide(
               color: (isDark ? Colors.white24 : Colors.black12),
@@ -110,7 +121,7 @@ class _ExplainScreenV2State extends State<ExplainScreenV2>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -207,19 +218,19 @@ class _PinkWavePainter extends CustomPainter {
     // 2) Then draw 3 layered waves (higher z-order)
     final waves = [
       _WaveSpec(
-          color: const Color(0xFFFD7EB2).withOpacity(0.35),
+          color: const Color(0xFFFD7EB2).withValues(alpha: 0.35),
           amp: 16,
           k: 2.0,
           speed: 0.9,
           base: 0.58),
       _WaveSpec(
-          color: const Color(0xFFFC93C7).withOpacity(0.35),
+          color: const Color(0xFFFC93C7).withValues(alpha: 0.35),
           amp: 22,
           k: 1.5,
           speed: 1.2,
           base: 0.62),
       _WaveSpec(
-          color: const Color(0xFFFFABD6).withOpacity(0.35),
+          color: const Color(0xFFFFABD6).withValues(alpha: 0.35),
           amp: 28,
           k: 1.0,
           speed: 1.6,
@@ -247,7 +258,7 @@ class _PinkWavePainter extends CustomPainter {
     // 3) Foreground title text (optional)
     final tp = TextPainter(
       text: const TextSpan(
-        text: 'Sleep benefits of pink noise',
+        text: 'How Sleepy works',
         style: TextStyle(
             fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black),
       ),
@@ -257,8 +268,7 @@ class _PinkWavePainter extends CustomPainter {
 
     final sub = TextPainter(
       text: const TextSpan(
-        text:
-            'How it works - predictable 1/f sound helps reduce sleep disruptions.',
+        text: 'Offline sound, flexible timers, and gentle fade-out controls.',
         style: TextStyle(fontSize: 13, height: 1.25, color: Colors.black87),
       ),
       textDirection: TextDirection.ltr,
@@ -310,8 +320,8 @@ class _EffectCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: isDark
-          ? Colors.white.withOpacity(0.05)
-          : Colors.black.withOpacity(0.03),
+          ? Colors.white.withValues(alpha: 0.05)
+          : Colors.black.withValues(alpha: 0.03),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -320,7 +330,10 @@ class _EffectCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, size: 22),
@@ -365,8 +378,8 @@ class _SectionCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: isDark
-          ? Colors.white.withOpacity(0.04)
-          : Colors.black.withOpacity(0.02),
+          ? Colors.white.withValues(alpha: 0.04)
+          : Colors.black.withValues(alpha: 0.02),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 2),
         child: Column(
@@ -419,8 +432,8 @@ class _FaqSection extends StatelessWidget {
         children: const [
           SizedBox(height: 8),
           _FaqTile(
-            q: 'How is it different from white noise?',
-            a: 'White noise has equal power across all frequencies. Pink noise follows a 1/f curve, so lower frequencies are stronger. It usually sounds softer and more natural.',
+            q: 'Which sound should I choose?',
+            a: 'There is no single best sound. Try the eight options at a low volume and use the one that feels most comfortable in your space.',
           ),
           _FaqTile(
             q: 'How loud should it be?',
@@ -428,7 +441,7 @@ class _FaqSection extends StatelessWidget {
           ),
           _FaqTile(
             q: 'Earphones or speaker?',
-            a: 'Most users find a speaker more comfortable for sleep, but this depends on your environment and preference.',
+            a: 'A speaker avoids wearing earphones in bed. Whichever you use, keep the volume low and follow the device manufacturer\'s safety guidance.',
           ),
         ],
       ),

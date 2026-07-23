@@ -11,21 +11,46 @@ import 'package:flutter_sleepy/services/metrics_service.dart';
 import 'package:flutter_sleepy/theme/dynamic_color_helper.dart';
 import 'package:flutter_sleepy/theme/theme_controller.dart';
 
-Future<void> main() async {
+typedef StartupTask = ({String label, Future<void> Function() run});
+
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
+  final controller = ThemeController();
+  runApp(MyApp(controller: controller));
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(_initializeAfterFirstFrame(controller));
+  });
+}
+
+Future<void> _initializeAfterFirstFrame(ThemeController controller) {
+  final tasks = <StartupTask>[
     if (!kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
-            defaultTargetPlatform == TargetPlatform.iOS)) {
-      await initializeService();
-    }
-  } catch (e) {
-    debugPrint('Failed to initialize background service: $e');
-  }
-  final controller = ThemeController();
-  await controller.load();
-  await MetricsService.instance.trackAppOpen();
-  runApp(MyApp(controller: controller));
+            defaultTargetPlatform == TargetPlatform.iOS))
+      (label: 'Background service', run: initializeService),
+    (label: 'Theme preferences', run: controller.load),
+    (label: 'Local metrics', run: MetricsService.instance.trackAppOpen),
+  ];
+  return runBestEffortStartupTasks(tasks);
+}
+
+@visibleForTesting
+Future<void> runBestEffortStartupTasks(
+  Iterable<StartupTask> tasks, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  await Future.wait(
+    tasks.map(
+      (task) async {
+        try {
+          await Future<void>.sync(task.run).timeout(timeout);
+        } catch (error) {
+          debugPrint('${task.label} initialization skipped: $error');
+        }
+      },
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -50,10 +75,15 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // Fetch dynamic color schemes (Android 12+)
     fetchDynamicSchemes().then((schemes) {
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _dynLight = schemes.$1;
         _dynDark = schemes.$2;
       });
+    }).catchError((Object error) {
+      debugPrint('Dynamic colors unavailable: $error');
     });
     widget.controller.addListener(_onThemeChanged);
   }

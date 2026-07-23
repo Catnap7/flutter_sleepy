@@ -1,5 +1,7 @@
-import 'dart:ui';
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_sleepy/data/tracks.dart';
@@ -20,17 +22,13 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_sleepy/ui/soundscape_adapter.dart';
 import 'package:flutter_sleepy/theme/theme_controller.dart';
 import 'package:flutter_sleepy/ui/sound_selector.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class _TimerPreset {
   const _TimerPreset(this.label, this.duration);
 
   final String label;
   final Duration duration;
-}
-
-enum _BatteryPromptAction {
-  allow,
-  notNow,
 }
 
 enum _BatteryOptimizationStatus {
@@ -53,16 +51,18 @@ class AudioHomePage extends StatefulWidget {
 
 class _AudioHomePageState extends State<AudioHomePage>
     with WidgetsBindingObserver {
-  late final AudioService _audioService;
+  final AudioService _audioService = AudioService();
   int _selectedIndex = 0;
   Duration _remainingTime = Duration.zero;
   StreamSubscription<Duration>? _timerSub;
   StreamSubscription<PlayerState>? _playerSub;
   Timer? _stopServiceDebounce;
   int _lastNotificationBucket = -1;
-  bool _batteryPromptInProgress = false;
   bool _fadeOutEnabled = true;
   bool _wasPlaying = false;
+  bool _isAudioReady = false;
+  bool _isAudioInitializing = true;
+  String? _audioInitializationError;
   Duration _lastRemainingTime = Duration.zero;
   Future<_BatteryOptimizationStatus>? _batteryStatusFuture;
   final SoundPreferenceService _soundPreferences =
@@ -82,25 +82,37 @@ class _AudioHomePageState extends State<AudioHomePage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _batteryStatusFuture = _loadBatteryOptimizationStatus();
-    _initializeServices();
+    unawaited(_initializeServices());
   }
 
   Future<void> _initializeServices() async {
-    _audioService = AudioService();
-    await _runServiceStep(
-      _initializeAudio,
-      'Audio initialize',
-    );
-  }
-
-  Future<void> _runServiceStep(
-    Future<void> Function() action,
-    String debugLabel,
-  ) async {
+    if (mounted) {
+      setState(() {
+        _isAudioReady = false;
+        _isAudioInitializing = true;
+        _audioInitializationError = null;
+      });
+    }
     try {
-      await action();
+      await _initializeAudio();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isAudioReady = true;
+        _isAudioInitializing = false;
+      });
     } catch (error) {
-      debugPrint('$debugLabel skipped: $error');
+      debugPrint('Audio initialization skipped: $error');
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isAudioReady = false;
+        _isAudioInitializing = false;
+        _audioInitializationError =
+            'Sounds could not be prepared. Check the app files and try again.';
+      });
     }
   }
 
@@ -112,7 +124,10 @@ class _AudioHomePageState extends State<AudioHomePage>
     }
     final didLoadInitialTrack = await _setTrack(_selectedIndex);
     if (!didLoadInitialTrack) {
-      await _loadFirstPlayableTrack();
+      final didLoadFallback = await _loadFirstPlayableTrack();
+      if (!didLoadFallback) {
+        throw StateError('No playable tracks found.');
+      }
     }
     _setupTimerListener();
     _setupPlayerStateListener();
@@ -131,6 +146,9 @@ class _AudioHomePageState extends State<AudioHomePage>
   }
 
   void _updateRemainingTime(Duration duration) {
+    if (!mounted) {
+      return;
+    }
     if (_lastRemainingTime > Duration.zero && duration == Duration.zero) {
       unawaited(MetricsService.instance.track('timer_completed'));
     }
@@ -150,8 +168,7 @@ class _AudioHomePageState extends State<AudioHomePage>
       }
       _wasPlaying = true;
       _stopServiceDebounce?.cancel();
-      _ensureBackgroundServiceRunning();
-      _sendNowPlayingUpdate(force: true);
+      unawaited(_ensureBackgroundServiceAndRefreshNotification());
       return;
     }
 
@@ -215,22 +232,23 @@ class _AudioHomePageState extends State<AudioHomePage>
     unawaited(_soundPreferences.saveSelectedTrack(TracksData.tracks[index]));
   }
 
-  Future<void> _loadFirstPlayableTrack() async {
+  Future<bool> _loadFirstPlayableTrack() async {
     for (var i = 0; i < TracksData.tracks.length; i++) {
       final didLoadTrack = await _setTrack(i);
       if (!didLoadTrack) {
         continue;
       }
       if (!mounted) {
-        return;
+        return false;
       }
       if (_selectedIndex != i) {
         setState(() => _selectedIndex = i);
       }
       unawaited(_soundPreferences.saveSelectedTrack(TracksData.tracks[i]));
-      return;
+      return true;
     }
     debugPrint('No playable tracks found.');
+    return false;
   }
 
   Future<void> _ensureBackgroundServiceRunning() async {
@@ -244,6 +262,11 @@ class _AudioHomePageState extends State<AudioHomePage>
     service.invoke('setAsForeground');
   }
 
+  Future<void> _ensureBackgroundServiceAndRefreshNotification() async {
+    await _ensureBackgroundServiceRunning();
+    _sendNowPlayingUpdate(force: true);
+  }
+
   Future<void> _stopBackgroundService() async {
     final service = FlutterBackgroundService();
     if (!await service.isRunning()) {
@@ -253,94 +276,29 @@ class _AudioHomePageState extends State<AudioHomePage>
   }
 
   Future<bool> _handlePlayRequest() async {
-    await _maybeShowBatteryOptimizationEducation();
-    return true;
+    if (!_isAudioReady) {
+      return false;
+    }
+    await _requestNotificationPermissionIfNeeded();
+    return mounted;
   }
 
-  Future<void> _maybeShowBatteryOptimizationEducation() async {
-    if (!mounted || _batteryPromptInProgress) {
+  Future<void> _requestNotificationPermissionIfNeeded() async {
+    if (!Platform.isAndroid) {
       return;
     }
-    final shouldShow = await BatteryOptimizationHandler.shouldShowEducation();
-    if (!shouldShow || !mounted) {
-      return;
-    }
-
-    _batteryPromptInProgress = true;
     try {
-      final action = await _showBatteryOptimizationSheet();
-      await BatteryOptimizationHandler.markEducationShown();
-      unawaited(
-          MetricsService.instance.track('battery_optimization_prompt_shown'));
-      if (action == _BatteryPromptAction.allow) {
-        await BatteryOptimizationHandler.requestIgnoreBatteryOptimization();
-        _refreshBatteryOptimizationStatus();
-        unawaited(
-            MetricsService.instance.track('battery_optimization_allowed'));
-      } else {
-        unawaited(
-            MetricsService.instance.track('battery_optimization_skipped'));
+      final status = await Permission.notification.status;
+      if (status.isDenied) {
+        final result = await Permission.notification.request();
+        unawaited(MetricsService.instance.track(
+          'notification_permission_result',
+          properties: {'status': result.name},
+        ));
       }
-    } finally {
-      _batteryPromptInProgress = false;
+    } catch (error) {
+      debugPrint('Notification permission request skipped: $error');
     }
-  }
-
-  Future<_BatteryPromptAction?> _showBatteryOptimizationSheet() {
-    return showModalBottomSheet<_BatteryPromptAction>(
-      context: context,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (context) {
-        final colorScheme = Theme.of(context).colorScheme;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Keep playback stable in the background',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'On some Android devices, battery optimization may stop sounds when the screen turns off. '
-                'You can allow Sleepy to ignore this optimization for smoother overnight playback.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () =>
-                          Navigator.pop(context, _BatteryPromptAction.notNow),
-                      child: const Text('Not now'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                      ),
-                      onPressed: () =>
-                          Navigator.pop(context, _BatteryPromptAction.allow),
-                      child: const Text('Allow'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Future<_BatteryOptimizationStatus> _loadBatteryOptimizationStatus() async {
@@ -412,10 +370,10 @@ class _AudioHomePageState extends State<AudioHomePage>
 
   @override
   void dispose() {
-    _audioService.dispose();
     _timerSub?.cancel();
     _playerSub?.cancel();
     _stopServiceDebounce?.cancel();
+    _audioService.dispose();
     WidgetsBinding.instance.removeObserver(this);
     FlutterBackgroundService().invoke('stopService');
     super.dispose();
@@ -461,33 +419,39 @@ class _AudioHomePageState extends State<AudioHomePage>
             child: ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
-                _glass(
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: SoundSelectorCard(
-                      value:
-                          TracksData.tracks[_selectedIndex].title.toLowerCase(),
-                      onChanged: _onSoundKeyChanged,
+                AnimatedOpacity(
+                  opacity: _isAudioReady ? 1 : 0.55,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !_isAudioReady,
+                    child: _glass(
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: SoundSelectorCard(
+                          value: TracksData.tracks[_selectedIndex].title
+                              .toLowerCase(),
+                          onChanged: _onSoundKeyChanged,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                AudioControls(
-                  _audioService.player,
-                  volume: _audioService.volume,
-                  volumeStream: _audioService.volumeStream,
-                  onVolumeChanged: _audioService.setVolume,
-                  onPlayRequested: _handlePlayRequest,
-                  onPlayPauseChanged: (isPlaying) =>
-                      _sendNowPlayingUpdate(force: true),
-                ),
+                _buildAudioControls(),
                 const SizedBox(height: 20),
                 _buildBatteryOptimizationStatus(),
                 const SizedBox(height: 20),
-                _glass(
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: _buildTimerSection(),
+                AnimatedOpacity(
+                  opacity: _isAudioReady ? 1 : 0.55,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !_isAudioReady,
+                    child: _glass(
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: _buildTimerSection(),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -575,6 +539,54 @@ class _AudioHomePageState extends State<AudioHomePage>
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioControls() {
+    if (_isAudioReady) {
+      return AudioControls(
+        _audioService.player,
+        volume: _audioService.volume,
+        volumeStream: _audioService.volumeStream,
+        onVolumeChanged: _audioService.setVolume,
+        onPlayRequested: _handlePlayRequest,
+        onPlayPauseChanged: (isPlaying) => _sendNowPlayingUpdate(force: true),
+      );
+    }
+
+    return _glass(
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(
+          children: [
+            if (_isAudioInitializing)
+              const SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            else
+              Icon(
+                Icons.audio_file_outlined,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                _isAudioInitializing
+                    ? 'Preparing offline sounds…'
+                    : _audioInitializationError ?? 'Sounds are not ready.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            if (!_isAudioInitializing)
+              TextButton.icon(
+                onPressed: _initializeServices,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+          ],
         ),
       ),
     );
@@ -723,6 +735,9 @@ class _AudioHomePageState extends State<AudioHomePage>
   }
 
   void _startTimer(Duration duration) {
+    if (!_isAudioReady) {
+      return;
+    }
     _audioService.startTimer(
       duration,
       enableFadeOut: _fadeOutEnabled,

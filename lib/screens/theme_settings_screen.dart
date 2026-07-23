@@ -9,13 +9,19 @@ class ThemeSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    Widget tile({required String title, required String subtitle, required AppThemeOption value, required IconData icon}) {
+    Widget tile(
+        {required String title,
+        required String subtitle,
+        required AppThemeOption value,
+        required IconData icon}) {
       final selected = controller.option == value;
       return ListTile(
         leading: Icon(icon, color: selected ? cs.primary : cs.onSurfaceVariant),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: selected ? Icon(Icons.radio_button_checked, color: cs.primary) : const Icon(Icons.radio_button_off),
+        trailing: selected
+            ? Icon(Icons.radio_button_checked, color: cs.primary)
+            : const Icon(Icons.radio_button_off),
         onTap: () async {
           await controller.setOption(value);
           // ignore: use_build_context_synchronously
@@ -51,8 +57,11 @@ class ThemeSettingsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              'Tip: Sleep Mode avoids bright blues/whites to reduce melatonin disruption, using gentle purples and warm grays.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              'Tip: Sleep Mode uses muted purples, warm grays, and softer contrast for a calmer bedtime screen.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
           const SizedBox(height: 16),
@@ -65,7 +74,8 @@ class ThemeSettingsScreen extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Background FX Intensity', style: Theme.of(context).textTheme.titleMedium),
+                    Text('Background FX Intensity',
+                        style: Theme.of(context).textTheme.titleMedium),
                     Row(
                       children: [
                         Expanded(
@@ -80,13 +90,17 @@ class ThemeSettingsScreen extends StatelessWidget {
                         ),
                         SizedBox(
                           width: 48,
-                          child: Text(v.toStringAsFixed(2), textAlign: TextAlign.end),
+                          child: Text(v.toStringAsFixed(2),
+                              textAlign: TextAlign.end),
                         ),
                       ],
                     ),
                     Text(
                       'Lower saves battery, higher adds detail. Default 1.00',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 );
@@ -99,4 +113,3 @@ class ThemeSettingsScreen extends StatelessWidget {
     );
   }
 }
-

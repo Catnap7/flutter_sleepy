@@ -11,9 +11,7 @@ Future<Duration?> showCustomTimerDialog({
 }) async {
   assert(minMinutes > 0 && maxMinutes >= minMinutes);
 
-  double selected = initialMinutes
-      .clamp(minMinutes, maxMinutes)
-      .toDouble();
+  double selected = initialMinutes.clamp(minMinutes, maxMinutes).toDouble();
 
   final theme = Theme.of(context);
   final cs = theme.colorScheme;
@@ -28,13 +26,22 @@ Future<Duration?> showCustomTimerDialog({
           borderRadius: BorderRadius.circular(context.radii.lg),
         ),
         titlePadding: EdgeInsets.fromLTRB(
-          context.sp.lg, context.sp.lg, context.sp.lg, context.sp.sm,
+          context.sp.lg,
+          context.sp.lg,
+          context.sp.lg,
+          context.sp.sm,
         ),
         contentPadding: EdgeInsets.fromLTRB(
-          context.sp.lg, context.sp.md, context.sp.lg, context.sp.md,
+          context.sp.lg,
+          context.sp.md,
+          context.sp.lg,
+          context.sp.md,
         ),
         actionsPadding: EdgeInsets.fromLTRB(
-          context.sp.lg, 0, context.sp.lg, context.sp.lg,
+          context.sp.lg,
+          0,
+          context.sp.lg,
+          context.sp.lg,
         ),
         title: Row(
           children: [

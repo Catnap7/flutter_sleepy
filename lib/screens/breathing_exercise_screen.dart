@@ -296,7 +296,7 @@ class _BreathingExerciseScreenState extends State<BreathingExerciseScreen>
                           ? theme.colorScheme.errorContainer
                           : theme.colorScheme.primary,
                       foregroundColor: _isRunning
-                          ? theme.colorScheme.onErrorContainer
+                          ? Colors.white
                           : theme.colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -304,9 +304,10 @@ class _BreathingExerciseScreenState extends State<BreathingExerciseScreen>
                     ),
                     child: Text(
                       _isRunning ? 'Stop' : 'Start',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: _isRunning ? Colors.white : null,
                       ),
                     ),
                   ),

@@ -10,4 +10,3 @@ Future<(ColorScheme?, ColorScheme?)> fetchDynamicSchemes() async {
   final dark = corePalette.toColorScheme(brightness: Brightness.dark);
   return (light, dark);
 }
-
